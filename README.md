@@ -1,111 +1,68 @@
-# OverheadLink v0.3.6 one-file Windows build
+# OverheadLink v0.3.8
 
-OverheadLink is the standalone controller for the physical A320 forward overhead. It is designed to own the overhead Arduino serial ports directly while other cockpit hardware can continue using MobiFlight.
+OverheadLink is the standalone Windows controller for the physical Airbus A320 forward overhead. It owns the selected overhead Arduino serial ports directly while other cockpit hardware can continue using MobiFlight. The MobiFlight Connector application should be closed for boards owned by OverheadLink; the MobiFlight WASM module remains installed in the MSFS Community folder so OverheadLink can exchange Fenix RPN/LVar data.
 
-## Included in this build
+## Current capabilities
 
-- Stable Arduino identity independent of Windows COM-port changes.
-- Seed profile containing the supplied Mega assignments.
-- Pin conflict and reserved-pin validation.
-- Two-confirmation digital input learning.
-- Cross-Mega pin correction when a control is detected on a different board.
-- Full-travel analogue pin discovery and calibration for potentiometers.
-- Safe output verification restricted to declared output candidates.
-- **Find Correct Pin** repair logic with reversible profile backups.
-- Right-click pin mapping: automatically reassign an input by operating its physical control, or manually edit its Mega, pin, polarity, and debounce value.
-- Live debug event log.
+- Stable EEPROM identities for Arduino Mega 2560 controllers, independent of Windows COM-port changes.
+- Separately assignable `ELEC`, `HYD-FUEL`, `AIR-COND`, `EXT-LIGHT-OVERHEAD`, optional APU/left-side panels, and `BACKLIGHT-NANO`.
+- Automatic validated-map loading when an identified Mega comes online.
+- Safe pin validation, D0/D1 protection, duplicate-pin detection, peripheral pin reservation, timestamped backups, and atomic profile writes.
+- Digital/analogue pin learning, cross-Mega correction, manual pin editing, polarity/debounce editing, and safe output discovery.
 - Native MSFS 2024 SimConnect client-data connection to a private MobiFlight-WASM channel.
-- Fenix RPN input commands and live annunciator LVar feedback from the supplied corrected mappings.
-- Searchable offline snapshot of all 488 Fenix A320 overhead actions found in MobiFlight HubHop, with direct press, release, potentiometer, and annunciator-feedback assignment.
-- Backlighting Nano support with three configurable presets:
-  - `FULL LIGHT` = 255
-  - `HALF DIM` = 128
-  - `DAY TIME DIM` = 180
-- Five colour presets—`AIRBUS AMBER`, `WARM WHITE`, `SOFT WHITE`, `DEEP ORANGE`, and `RED NIGHT`—plus custom RGB adjustment and live preview.
-- Nano startup illumination, persistent preset selection, D6 WS2812B data, 300 LEDs, and amber/orange RGB `(255,128,0)`.
+- Fenix input commands and live annunciator feedback from the supplied mappings.
+- Searchable offline snapshot of 488 Fenix A320 overhead HubHop actions.
+- Automatic Fenix/WASM reconnect until the bridge is genuinely ready.
+- Backlighting Nano control with brightness and colour presets.
+- LAN-only iPhone/iPad/Android/browser remote with a per-launch six-digit pairing code.
+- Verified in-app updates from GitHub Releases with SHA-256 and package-signature checks.
 
-## Important first-run rule
+## v0.3.8: BATTERY 2 TM1637 display
 
-MobiFlight Connector must be closed, or these specific overhead boards must be disabled in MobiFlight, before OverheadLink can open their COM ports. Two Windows applications cannot own the same serial port simultaneously.
+The ELEC Mega now supports the BATTERY 2 four-digit TM1637 voltage display:
 
-Do not flash the supplied Mega firmware until the saved MobiFlight board configurations have been backed up. Flashing replaces MobiFlight firmware on that board. It does not change the physical wiring.
+| Signal | Mega pin |
+|---|---|
+| CLK | A2 |
+| DIO | A3 |
 
-## One-file Windows run
+A2/A3 are first-class reserved peripheral pins and cannot be accidentally assigned to a normal Korry or potentiometer. OverheadLink subscribes to battery-2 voltage through the simulator bridge and sends the value to the Mega as tenths of a volt, so `281` is rendered as `28.1`. Invalid/unavailable values render as `----`.
 
-Double-click `OverheadLink_v0.3.6_Windows_x64.exe`. On the first run it silently installs a private Python 3.12 runtime and PySerial package from files embedded inside the executable, creates an OverheadLink desktop shortcut, and opens the application. No separate downloads, Python setup, PowerShell commands, or administrator access are required.
+**The ELEC Mega must run OverheadLink Mega firmware v0.3.0 or newer for the TM1637 driver.** Flash `firmware\OverheadLinkMega\OverheadLinkMega.ino` after backing up any old MobiFlight configuration for that board.
 
-On **Connections**, right-click a detected Mega and choose **Assign to…**. Right-click unrelated SL3, Rowsfire, or MobiFlight ports and choose **Ignore this COM port**. Ignored ports stay visible, are released immediately, remain ignored after restart, and can be restored with **Use this COM port in OverheadLink**.
+## Current HYD/FUEL split
 
-Later runs open the application directly. OverheadLink automatically scans the USB boards, loads the validated map as soon as an identified Mega comes online, and keeps trying to connect to MSFS 2024 / Fenix in the background.
+The former combined `ELEC-HYD-FUEL` identity is migrated into separate `ELEC` and `HYD-FUEL` profiles. The dedicated HYD/FUEL Mega uses the user-confirmed map in `PIN_ASSIGNMENTS.md`. The HYD BLUE electric pump intentionally remains on ELEC until its new dedicated-board pins are supplied; OverheadLink does not invent a replacement pin assignment.
 
-The executable targets 64-bit Windows 10/11. It is not code-signed, so Windows SmartScreen may show an unknown-publisher warning on the first run.
+IDG 1 switch is D6 on the ELEC Mega. BATTERY 2 display CLK/DIO are A2/A3 on the ELEC Mega.
 
-## Development run on Windows
+## First run / update
 
-1. Install Python 3.12 from python.org and enable the Python launcher.
-2. Double-click `scripts\Run_OverheadLink.bat`.
-3. The first launch creates a local environment and installs the serial driver package.
+1. Install or update to `OverheadLink_v0.3.8_Windows_x64.exe`.
+2. Existing installations can use **Updates → Check for Updates → Download and Install Update**.
+3. On **Connections**, right-click each detected OverheadLink Mega and choose **Assign to…** for the correct panel.
+4. Right-click unrelated SL3, Rowsfire, MobiFlight, or other serial devices and choose **Ignore this COM port**.
+5. Flash current Mega firmware to boards that OverheadLink will own; the ELEC Mega specifically needs firmware v0.3.0+ for TM1637.
+6. Start MSFS 2024 and load the Fenix A320. OverheadLink will keep retrying the SimConnect/WASM connection until ready.
 
-The application opens in **offline diagnostic mode** if no OverheadLink firmware is detected, so profiles and validation can still be inspected. Use **Offline Fenix simulation** to test the event path without MSFS.
+See `QUICK_START.md` for the bench sequence.
 
-## Build a development Windows executable
+## Remote overhead panel
 
-Right-click `scripts\Build_Windows_EXE.ps1`, choose **Run with PowerShell**, and use:
+Open the **Remote** tab. It shows the LAN address and a fresh six-digit pairing code. On an iPhone or other device connected to the same network, open the address in Safari/browser, enter the pairing code, and use the touch overhead. On iPhone, **Share → Add to Home Screen** gives it an app-like launcher. The remote is local-network only; simulator commands are still executed by the cockpit PC.
 
-`dist\OverheadLink\OverheadLink.exe`
+## Backlighting
 
-The generated folder is self-contained and does not require Python on the simulator PC.
+The separate `BACKLIGHT-NANO` drives the WS2812B strip and keeps the existing brightness and colour controls. The current defaults include `FULL LIGHT`, `HALF DIM`, `DAY TIME DIM`, plus Airbus amber and other colour presets. The Nano sketch requires the Arduino Adafruit NeoPixel library.
 
-## Firmware
+## Safety / recovery
 
-- `firmware\OverheadLinkMega\OverheadLinkMega.ino` goes on each overhead Mega that OverheadLink will own.
-- `firmware\OverheadLinkBacklightNano\OverheadLinkBacklightNano.ino` goes on the COM21 backlighting Nano.
-- The Nano sketch requires the Arduino **Adafruit NeoPixel** library.
+Mega pins start in a safe state. Ordinary outputs are not driven until OverheadLink loads a validated profile, and output discovery is limited to declared output candidates. v0.3.8 additionally reserves peripheral pins in both the desktop profile and Mega firmware, buffers fragmented serial packets, rejects ambiguous duplicate panel identities, and rolls back failed mapping writes instead of leaving partial in-memory state.
 
-Each board starts in a safe state. Mega output pins are not driven until the desktop application loads a validated profile. LED discovery only pulses pins declared as output candidates.
+Every accepted repair creates a timestamped profile backup. Use **Live Debug** / **Export Log** if a Fenix action, annunciator, COM assignment, or TM1637 display disagrees with the physical panel.
 
-## Connect MSFS 2024 / Fenix
+## Verification status
 
-1. Keep the MobiFlight WASM module installed in the MSFS Community folder. MobiFlight Connector itself can remain closed so OverheadLink can own these Arduino serial ports.
-2. Start MSFS 2024 and load the Fenix A320.
-3. Start OverheadLink. It connects to MSFS/Fenix automatically and keeps retrying if the simulator is not open yet.
-4. Each identified Mega receives its validated map automatically. The manual connection and map buttons remain available for troubleshooting.
+The v0.3.8 branch passes the complete automated Python regression suite and includes a CI compile of the Mega firmware for `arduino:avr:mega`. Physical bench verification is still required for the actual installed Arduino boards, Fenix build, TM1637 module, and cockpit wiring before treating a new mapping as flight-ready.
 
-The app registers its own `OverheadLink.Command`, `OverheadLink.Response`, and `OverheadLink.LVars` channels, so it does not use the default MobiFlight client channel for continuous operation. v0.3.6 includes a compatible 64-bit SimConnect client runtime, uses the correct SimConnect on-change subscription period, retries WASM registration during simulator startup, and checks installed MobiFlight and MSFS SDK locations automatically.
-
-## Automatic updates
-
-OverheadLink checks `captainjetstar/OverheadLink-Releases` after startup. The **Updates** tab shows the installed and latest versions and provides a one-click verified update. Downloads are checked against the release SHA-256 file before the app closes, installs the new one-file build, and reopens automatically.
-
-The live transport is implemented and covered by a simulated client-data transport test. It still needs the first real bench run on the simulator PC, because MSFS 2024, Fenix, the WASM module, and the physical boards are not available in this build environment.
-
-## Correct a wrong pin
-
-- For a switch or selector, choose its assignment, click **Find Correct Pin**, then operate it twice. The app monitors every connected Mega and proposes the board, pin, and polarity it actually detected.
-- For a potentiometer, click **Find Correct Pin**, move it slowly through full travel twice, then click **Finish Analogue Scan**. The app saves the detected Mega, analogue pin, endpoints, direction, and noise measurement.
-- For an annunciator output, use **Find Correct Output Pin**. The app pulses only pins already validated as outputs and asks which one illuminated the selected legend. If two output assignments were crossed, it offers a reversible swap. Software cannot see which physical lamp lit without an electrical return signal, so the confirmation remains visual; unknown and input-designated pins are never driven.
-
-Every accepted repair creates a timestamped backup before replacing the active profile.
-
-## Assign a MobiFlight Fenix action
-
-The **Fenix Actions** tab contains 488 overhead presets from the MobiFlight HubHop snapshot dated 2026-08-23. Search by panel system, label, LVar, or RPN expression.
-
-- To bind a known pin, select it on **Assign Pins**, click **Choose Fenix Action…**, select the matching action, and click **Assign Action to Selected Pin**. Digital inputs can have separate operated/pressed and released actions.
-- To start with the simulator action, select it on **Fenix Actions**, click **Find Pin by Operating Korry**, and operate the matching Korry twice. The app detects the Mega, pin, and active-low polarity, asks whether the action belongs on press or release, and saves it with a backup.
-- Potentiometer actions use the stored analogue calibration and replace MobiFlight's `@` placeholder with a live 0–1023 value.
-- Output presets can only be assigned to declared annunciator outputs. Physical lamp discovery remains restricted to the safe output-pin test.
-
-HubHop is community maintained. The bundled action expressions are source-preserved and user-selectable, but each newly selected mapping should still be checked once against the installed Fenix version during the bench run.
-
-## Backlighting Nano
-
-The Nano is a separate logical controller with stable identity `BACKLIGHT-NANO`. It drives 300 WS2812B LEDs on D6, powers up illuminated, and stores the last selection in EEPROM.
-
-| Option | Default |
-|---|---:|
-| FULL LIGHT | 255 |
-| HALF DIM | 128 |
-| DAY TIME DIM | 180 |
-
-All three values can be changed from 0–255 in the Backlighting tab and are then sent to the Nano whenever that option is selected.
+The Windows setup executable is not commercially code-signed, so Windows SmartScreen may display an unknown-publisher warning.
