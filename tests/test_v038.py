@@ -16,7 +16,8 @@ from overheadlink.bootstrap import BAT2_SIM_EXPRESSION, HYD_FUEL_PIN_MAP, migrat
 from overheadlink.models import OverheadProfile
 from overheadlink.profile import ProfileStore, ProfileValidator
 from overheadlink.protocol import encode_message, parse_message
-from overheadlink.serial_manager import SerialConnection
+from overheadlink.runtime import EnhancedOverheadLinkApp
+from overheadlink.serial_manager import BoardManager, ConnectedBoard, SerialConnection
 from overheadlink.updater import is_newer, version_tuple
 
 
@@ -101,6 +102,41 @@ class ProtocolAndSerialV038Tests(unittest.TestCase):
         self.assertEqual(len(messages), 1)
         self.assertEqual(messages[0].message_type, "DIN")
         self.assertEqual(messages[0].parts[:2], ("25", "0"))
+
+    def test_duplicate_online_board_identity_is_ambiguous(self) -> None:
+        class FakeConnection:
+            running = True
+            last_error = ""
+
+        manager = BoardManager()
+        first = ConnectedBoard(port="COM1", board_name="ELEC", connection=FakeConnection())
+        second = ConnectedBoard(port="COM2", board_name="ELEC", connection=FakeConnection())
+        manager.boards_by_port = {"COM1": first, "COM2": second}
+        self.assertIsNone(manager.by_profile_name("ELEC"))
+        self.assertEqual(manager.duplicate_profile_ports("ELEC"), ["COM1", "COM2"])
+        with self.assertRaisesRegex(RuntimeError, "duplicated"):
+            manager.send_to_profile("ELEC", "RUN")
+
+
+class RuntimeV038Tests(unittest.TestCase):
+    def test_auto_runtime_retries_when_msfs_connected_but_wasm_not_ready(self) -> None:
+        calls = []
+
+        class BoolValue:
+            def get(self):
+                return False
+
+        fake = object.__new__(EnhancedOverheadLinkApp)
+        fake.offline_fenix = BoolValue()
+        fake.fenix_connecting = False
+        fake.fenix = type("Bridge", (), {"ready": False})()
+        fake._dash_all_displays = lambda: calls.append("dash")
+        fake._begin_fenix_connect = lambda force=False: calls.append(("connect", force))
+        fake.after = lambda milliseconds, callback: calls.append(("after", milliseconds))
+        EnhancedOverheadLinkApp._auto_runtime_tick(fake)
+        self.assertEqual(calls[0], "dash")
+        self.assertEqual(calls[1], ("connect", True))
+        self.assertEqual(calls[2], ("after", 15000))
 
 
 class UpdaterV038Tests(unittest.TestCase):
