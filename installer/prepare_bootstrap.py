@@ -32,9 +32,12 @@ def build_source(source: str, version: str) -> str:
         source,
         count=1,
     )
+    # Use a callable replacement here. re.sub() interprets backslash escapes in
+    # a replacement string, so a plain "\\r\\n" replacement becomes literal
+    # CR/LF characters and produces an invalid multiline C string literal.
     source = re.sub(
         r'static const char value\[\] = "[0-9]+\.[0-9]+\.[0-9]+\\r\\n";',
-        'static const char value[] = APP_VERSION_A "\\r\\n";',
+        lambda _match: 'static const char value[] = APP_VERSION_A "\\r\\n";',
         source,
         count=1,
     )
@@ -76,6 +79,7 @@ def build_source(source: str, version: str) -> str:
     required = [
         f'#define APP_VERSION L"{version}"',
         f'#define APP_VERSION_A "{version}"',
+        'static const char value[] = APP_VERSION_A "\\r\\n";',
         "!launched_from_external_installer && marker_matches(payload_marker)",
         "OverheadLink-Setup",
     ]
@@ -84,6 +88,8 @@ def build_source(source: str, version: str) -> str:
         raise RuntimeError(f"generated bootstrap is missing: {missing}")
     if "OverheadLink-Setup-v" in source:
         raise RuntimeError("generated bootstrap still contains a versioned setup mutex")
+    if 'APP_VERSION_A "\r\n";' in source:
+        raise RuntimeError("generated bootstrap contains a literal newline inside the version marker C string")
     return source
 
 
