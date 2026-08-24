@@ -12,7 +12,7 @@ from tkinter import messagebox, ttk
 import uuid
 
 from . import __version__
-from .backlight import BacklightController, BacklightSettings, BrightnessPreset
+from .backlight import COLOUR_PRESETS, BacklightController, BacklightSettings, BrightnessPreset, ColourPreset
 from .learning import AnalogLearningResult, AnalogLearningSession, DigitalLearningResult, DigitalLearningSession
 from .models import BoardKind, PinAssignment, PinMode, VerificationStatus, canonical_pin
 from .preferences import AppPreferences, canonical_port
@@ -347,17 +347,17 @@ class OverheadLinkApp(tk.Tk):
         settings = BacklightSettings.from_dict(self.profile.backlighting)
         info = ttk.Label(
             self.backlight_tab,
-            text="COM21 backlighting Nano · D6 WS2812B data · 300 LEDs · RGB 255,128,0 · starts illuminated automatically",
+            text="COM21 backlighting Nano · D6 WS2812B data · 300 LEDs · brightness and colour are stored automatically",
             style="Status.TLabel",
         )
-        info.pack(fill="x", pady=(0, 18))
+        info.pack(fill="x", pady=(0, 10))
         buttons = ttk.Frame(self.backlight_tab)
         buttons.pack(fill="x")
         for preset in BrightnessPreset:
             ttk.Button(buttons, text=preset.value, style="Preset.TButton", command=lambda p=preset: self._apply_backlight(p)).pack(side="left", expand=True, fill="x", padx=6)
 
         editor = ttk.Frame(self.backlight_tab, style="Card.TFrame", padding=20)
-        editor.pack(fill="x", pady=20)
+        editor.pack(fill="x", pady=(12, 8))
         self.brightness_vars: dict[BrightnessPreset, tk.IntVar] = {
             BrightnessPreset.FULL_LIGHT: tk.IntVar(value=settings.full_light),
             BrightnessPreset.HALF_DIM: tk.IntVar(value=settings.half_dim),
@@ -371,8 +371,64 @@ class OverheadLinkApp(tk.Tk):
             value.grid(row=row, column=2, padx=(10, 0), pady=8)
         editor.columnconfigure(1, weight=1)
         ttk.Button(editor, text="Save Brightness Options", command=self._save_brightness).grid(row=3, column=0, columnspan=3, sticky="ew", pady=(16, 0))
+
+        colour_editor = ttk.Frame(self.backlight_tab, style="Card.TFrame", padding=16)
+        colour_editor.pack(fill="x", pady=8)
+        ttk.Label(colour_editor, text="Backlight colour presets", style="Status.TLabel").pack(anchor="w")
+        colour_buttons = ttk.Frame(colour_editor, style="Card.TFrame")
+        colour_buttons.pack(fill="x", pady=(8, 10))
+        for preset, rgb in COLOUR_PRESETS.items():
+            background = self._rgb_hex(rgb)
+            foreground = "#111820" if sum(rgb) > 430 else "#ffffff"
+            tk.Button(
+                colour_buttons,
+                text=preset.value,
+                command=lambda selected=preset: self._apply_backlight_colour(selected),
+                bg=background,
+                fg=foreground,
+                activebackground=background,
+                activeforeground=foreground,
+                relief="flat",
+                font=("Segoe UI Semibold", 9),
+                padx=8,
+                pady=7,
+            ).pack(side="left", expand=True, fill="x", padx=3)
+
+        custom = ttk.Frame(colour_editor, style="Card.TFrame")
+        custom.pack(fill="x")
+        self.colour_vars: dict[str, tk.IntVar] = {
+            "red": tk.IntVar(value=settings.red),
+            "green": tk.IntVar(value=settings.green),
+            "blue": tk.IntVar(value=settings.blue),
+        }
+        for column, (name, variable) in enumerate(self.colour_vars.items()):
+            ttk.Label(custom, text=name.upper(), style="Status.TLabel").grid(row=0, column=column * 2, sticky="w", padx=(0, 4))
+            ttk.Spinbox(custom, from_=0, to=255, textvariable=variable, width=5, command=self._refresh_colour_preview).grid(
+                row=0, column=column * 2 + 1, sticky="w", padx=(0, 12)
+            )
+            variable.trace_add("write", lambda *_args: self._refresh_colour_preview())
+        self.colour_preview = tk.Label(custom, text="", width=18, relief="flat", font=("Segoe UI Semibold", 9))
+        self.colour_preview.grid(row=0, column=6, sticky="ew", padx=(8, 10))
+        ttk.Button(custom, text="Apply Custom RGB", command=lambda: self._apply_backlight_colour(None)).grid(row=0, column=7, sticky="e")
+        custom.columnconfigure(6, weight=1)
+        self._refresh_colour_preview()
+
         self.backlight_status = ttk.Label(self.backlight_tab, text="Waiting for BACKLIGHT-NANO", style="Status.TLabel")
-        self.backlight_status.pack(fill="x")
+        self.backlight_status.pack(fill="x", pady=(8, 0))
+
+    @staticmethod
+    def _rgb_hex(rgb: tuple[int, int, int]) -> str:
+        return "#" + "".join(f"{max(0, min(255, int(value))):02x}" for value in rgb)
+
+    def _refresh_colour_preview(self) -> None:
+        if not hasattr(self, "colour_preview"):
+            return
+        try:
+            rgb = tuple(max(0, min(255, int(self.colour_vars[name].get()))) for name in ("red", "green", "blue"))
+        except (tk.TclError, ValueError):
+            return
+        foreground = "#111820" if sum(rgb) > 430 else "#ffffff"
+        self.colour_preview.configure(text=f"RGB {rgb[0]}, {rgb[1]}, {rgb[2]}", bg=self._rgb_hex(rgb), fg=foreground)
 
     def _build_debug_tab(self) -> None:
         toolbar = ttk.Frame(self.debug_tab)
@@ -891,6 +947,42 @@ class OverheadLinkApp(tk.Tk):
         self.backlight_status.configure(text=f"{preset.value} active — brightness {value}/255")
         self._log(f"BACKLIGHT {preset.value}: {value}/255")
 
+    def _apply_backlight_colour(self, preset: ColourPreset | None) -> None:
+        if preset is None:
+            try:
+                rgb = tuple(int(self.colour_vars[name].get()) for name in ("red", "green", "blue"))
+            except (tk.TclError, ValueError):
+                messagebox.showerror("Backlight colour", "Red, green and blue must each be numbers from 0 to 255.")
+                return
+            preset_name = "CUSTOM"
+        else:
+            rgb = COLOUR_PRESETS[preset]
+            preset_name = preset.value
+            for name, value in zip(("red", "green", "blue"), rgb):
+                self.colour_vars[name].set(value)
+        if any(not 0 <= value <= 255 for value in rgb):
+            messagebox.showerror("Backlight colour", "Red, green and blue must each be between 0 and 255.")
+            return
+        self.profile.backlighting["colour"] = {"red": rgb[0], "green": rgb[1], "blue": rgb[2]}
+        self.profile.backlighting["colourPreset"] = preset_name
+        self.profile_store.save(self.profile, f"Backlight colour changed to {preset_name}: RGB {rgb}")
+        self._refresh_colour_preview()
+        if self._send_backlight_colour(rgb):
+            self.backlight_status.configure(text=f"{preset_name} active — RGB {rgb[0]}, {rgb[1]}, {rgb[2]}")
+            self._log(f"BACKLIGHT COLOUR {preset_name}: RGB {rgb[0]},{rgb[1]},{rgb[2]}")
+        else:
+            self.backlight_status.configure(text=f"{preset_name} saved — it will apply when BACKLIGHT-NANO connects")
+
+    def _send_backlight_colour(self, rgb: tuple[int, int, int]) -> bool:
+        nano_profile = next((board for board in self.profile.boards if board.kind == BoardKind.BACKLIGHT_NANO), None)
+        connected = self.board_manager.by_profile_name(nano_profile.name) if nano_profile else None
+        if connected is None or not connected.online or connected.connection is None:
+            return False
+        settings = BacklightSettings.from_dict(self.profile.backlighting)
+        controller = BacklightController(connected.connection.send, settings)
+        controller.apply_colour(*rgb)
+        return True
+
     def _save_brightness(self) -> None:
         values = {preset.value: int(variable.get()) for preset, variable in self.brightness_vars.items()}
         if any(not 0 <= value <= 255 for value in values.values()):
@@ -957,6 +1049,8 @@ class OverheadLinkApp(tk.Tk):
                     self.after(350, lambda board_id=profile_board.id: self._auto_configure_board(board_id))
                 elif profile_board.kind == BoardKind.BACKLIGHT_NANO and board.connection:
                     board.connection.send(self._message("STATUS"))
+                    colour = BacklightSettings.from_dict(self.profile.backlighting)
+                    self._send_backlight_colour((colour.red, colour.green, colour.blue))
             self._refresh_connections()
             return
         if message.message_type == "DIN" and len(message.parts) >= 3:
@@ -975,6 +1069,8 @@ class OverheadLinkApp(tk.Tk):
                 self.analog_learning.observe(board.board_name or board.port, pin, value)
         elif message.message_type == "PRESET" and len(message.parts) >= 2:
             self.backlight_status.configure(text=f"Nano reports {message.parts[0]} — {message.parts[1]}/255")
+        elif message.message_type == "ACK" and message.parts and message.parts[0] == "COLOR":
+            self._log("BACKLIGHT-NANO confirmed colour change")
 
     def _complete_repair(self, result: DigitalLearningResult) -> None:
         if self.repair_target is None:

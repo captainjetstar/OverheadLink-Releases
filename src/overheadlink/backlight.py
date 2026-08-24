@@ -13,6 +13,23 @@ class BrightnessPreset(StrEnum):
     DAY_TIME_DIM = "DAY TIME DIM"
 
 
+class ColourPreset(StrEnum):
+    AIRBUS_AMBER = "AIRBUS AMBER"
+    WARM_WHITE = "WARM WHITE"
+    SOFT_WHITE = "SOFT WHITE"
+    DEEP_ORANGE = "DEEP ORANGE"
+    RED_NIGHT = "RED NIGHT"
+
+
+COLOUR_PRESETS: dict[ColourPreset, tuple[int, int, int]] = {
+    ColourPreset.AIRBUS_AMBER: (255, 100, 30),
+    ColourPreset.WARM_WHITE: (255, 210, 160),
+    ColourPreset.SOFT_WHITE: (255, 245, 225),
+    ColourPreset.DEEP_ORANGE: (255, 55, 0),
+    ColourPreset.RED_NIGHT: (255, 0, 0),
+}
+
+
 FIRMWARE_TOKENS = {
     BrightnessPreset.FULL_LIGHT: "FULL_LIGHT",
     BrightnessPreset.HALF_DIM: "HALF_DIM",
@@ -81,7 +98,13 @@ class BacklightController:
         self.current = preset
         return value
 
-    def apply_colour(self) -> None:
+    def apply_colour(self, red: int | None = None, green: int | None = None, blue: int | None = None) -> tuple[int, int, int]:
+        if red is not None:
+            self.settings.red = int(red)
+        if green is not None:
+            self.settings.green = int(green)
+        if blue is not None:
+            self.settings.blue = int(blue)
         self.settings.validate()
         self.send(encode_message("COLOR", self.settings.red, self.settings.green, self.settings.blue))
-
+        return self.settings.red, self.settings.green, self.settings.blue

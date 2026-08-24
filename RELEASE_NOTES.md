@@ -1,4 +1,11 @@
-# OverheadLink v0.3.4 one-file Windows build
+# OverheadLink v0.3.5 one-file Windows build
+
+## New in v0.3.5
+
+- Added five one-click Nano colour presets: **AIRBUS AMBER**, **WARM WHITE**, **SOFT WHITE**, **DEEP ORANGE**, and **RED NIGHT**.
+- Added editable red, green, and blue values with a live colour preview for exact adjustment to the installed LED strip.
+- The chosen colour is saved in the profile, persisted by the Nano, and automatically resent whenever COM21 reconnects.
+- Existing Nano firmware already supports the colour command, so this app update does not require reflashing the Nano.
 
 ## New in v0.3.4
 

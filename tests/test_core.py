@@ -15,7 +15,7 @@ import json
 PROJECT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT / "src"))
 
-from overheadlink.backlight import BacklightController, BacklightSettings, BrightnessPreset
+from overheadlink.backlight import COLOUR_PRESETS, BacklightController, BacklightSettings, BrightnessPreset, ColourPreset
 from overheadlink.learning import AnalogLearningSession, DigitalLearningSession
 from overheadlink.models import canonical_pin, pin_number
 from overheadlink.preferences import AppPreferences, canonical_port
@@ -119,6 +119,24 @@ class BacklightTests(unittest.TestCase):
         self.assertEqual(parse_message(sent[-1]).parts, ("FULL_LIGHT", "255"))
         self.assertEqual(controller.apply(BrightnessPreset.HALF_DIM), 128)
         self.assertEqual(controller.apply(BrightnessPreset.DAY_TIME_DIM), 180)
+
+    def test_colour_presets_send_rgb_and_cover_requested_options(self) -> None:
+        sent: list[bytes] = []
+        controller = BacklightController(sent.append, BacklightSettings())
+        for preset, rgb in COLOUR_PRESETS.items():
+            self.assertEqual(controller.apply_colour(*rgb), rgb)
+            self.assertEqual(parse_message(sent[-1]).message_type, "COLOR")
+            self.assertEqual(parse_message(sent[-1]).parts, tuple(str(value) for value in rgb))
+        self.assertEqual(
+            set(COLOUR_PRESETS),
+            {
+                ColourPreset.AIRBUS_AMBER,
+                ColourPreset.WARM_WHITE,
+                ColourPreset.SOFT_WHITE,
+                ColourPreset.DEEP_ORANGE,
+                ColourPreset.RED_NIGHT,
+            },
+        )
 
 
 class PortPreferenceTests(unittest.TestCase):

@@ -1,4 +1,4 @@
-# OverheadLink v0.3.4 one-file Windows build
+# OverheadLink v0.3.5 one-file Windows build
 
 OverheadLink is the standalone controller for the physical A320 forward overhead. It is designed to own the overhead Arduino serial ports directly while other cockpit hardware can continue using MobiFlight.
 
@@ -19,6 +19,7 @@ OverheadLink is the standalone controller for the physical A320 forward overhead
   - `FULL LIGHT` = 255
   - `HALF DIM` = 128
   - `DAY TIME DIM` = 180
+- Five colour presets—`AIRBUS AMBER`, `WARM WHITE`, `SOFT WHITE`, `DEEP ORANGE`, and `RED NIGHT`—plus custom RGB adjustment and live preview.
 - Nano startup illumination, persistent preset selection, D6 WS2812B data, 300 LEDs, and amber/orange RGB `(255,128,0)`.
 
 ## Important first-run rule
@@ -29,7 +30,7 @@ Do not flash the supplied Mega firmware until the saved MobiFlight board configu
 
 ## One-file Windows run
 
-Double-click `OverheadLink_v0.3.4_Windows_x64.exe`. On the first run it silently installs a private Python 3.12 runtime and PySerial package from files embedded inside the executable, creates an OverheadLink desktop shortcut, and opens the application. No separate downloads, Python setup, PowerShell commands, or administrator access are required.
+Double-click `OverheadLink_v0.3.5_Windows_x64.exe`. On the first run it silently installs a private Python 3.12 runtime and PySerial package from files embedded inside the executable, creates an OverheadLink desktop shortcut, and opens the application. No separate downloads, Python setup, PowerShell commands, or administrator access are required.
 
 On **Connections**, right-click a detected Mega and choose **Assign to…**. Right-click unrelated SL3, Rowsfire, or MobiFlight ports and choose **Ignore this COM port**. Ignored ports stay visible, are released immediately, remain ignored after restart, and can be restored with **Use this COM port in OverheadLink**.
 
@@ -68,7 +69,7 @@ Each board starts in a safe state. Mega output pins are not driven until the des
 3. Start OverheadLink. It connects to MSFS/Fenix automatically and keeps retrying if the simulator is not open yet.
 4. Each identified Mega receives its validated map automatically. The manual connection and map buttons remain available for troubleshooting.
 
-The app registers its own `OverheadLink.Command`, `OverheadLink.Response`, and `OverheadLink.LVars` channels, so it does not use the default MobiFlight client channel for continuous operation. v0.3.4 includes a compatible 64-bit SimConnect client runtime, uses the correct SimConnect on-change subscription period, retries WASM registration during simulator startup, and checks installed MobiFlight and MSFS SDK locations automatically.
+The app registers its own `OverheadLink.Command`, `OverheadLink.Response`, and `OverheadLink.LVars` channels, so it does not use the default MobiFlight client channel for continuous operation. v0.3.5 includes a compatible 64-bit SimConnect client runtime, uses the correct SimConnect on-change subscription period, retries WASM registration during simulator startup, and checks installed MobiFlight and MSFS SDK locations automatically.
 
 ## Automatic updates
 
