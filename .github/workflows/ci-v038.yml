@@ -19,7 +19,12 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install test runtime
-        run: python -m pip install pyserial==3.5
+        shell: bash
+        run: |
+          python -m pip install pyserial==3.5
+          mkdir -p vendor/simconnect-package
+          python -m pip download SimConnect==0.4.26 --no-deps --dest vendor/simconnect-package
+          python -c "import pathlib,zipfile; wheel=next(pathlib.Path('vendor/simconnect-package').glob('*.whl')); z=zipfile.ZipFile(wheel); member=next(n for n in z.namelist() if n.endswith('/SimConnect.dll')); pathlib.Path('vendor/SimConnect.dll').write_bytes(z.read(member))"
       - name: Compile Python sources
         run: python -m compileall -q src tests run_overheadlink.py
       - name: Run unit tests
