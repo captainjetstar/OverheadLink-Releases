@@ -8,7 +8,6 @@ from pathlib import Path
 import subprocess
 import tempfile
 from typing import Callable
-from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 
@@ -16,7 +15,6 @@ REPOSITORY = "captainjetstar/OverheadLink-Releases"
 LATEST_RELEASE_API = f"https://api.github.com/repos/{REPOSITORY}/releases/latest"
 USER_AGENT = "OverheadLink-Updater"
 DOWNLOAD_CHUNK_SIZE = 1024 * 256
-ALLOWED_DOWNLOAD_HOSTS = {"github.com", "objects.githubusercontent.com", "release-assets.githubusercontent.com"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,13 +63,6 @@ def _open_url(url: str):
     return urlopen(request, timeout=30)
 
 
-def _validate_asset_url(url: str) -> str:
-    parsed = urlparse(url)
-    if parsed.scheme != "https" or not parsed.hostname or parsed.hostname.lower() not in ALLOWED_DOWNLOAD_HOSTS:
-        raise RuntimeError("GitHub release contains an unexpected download URL")
-    return url
-
-
 def latest_release() -> UpdateInfo:
     with _open_url(LATEST_RELEASE_API) as response:
         release = json.loads(response.read().decode("utf-8"))
@@ -87,14 +78,14 @@ def latest_release() -> UpdateInfo:
     return UpdateInfo(
         version=version,
         notes=str(release.get("body") or "No release notes supplied."),
-        executable_url=_validate_asset_url(executable_url),
-        checksum_url=_validate_asset_url(checksum_url),
+        executable_url=executable_url,
+        checksum_url=checksum_url,
         release_url=str(release.get("html_url") or ""),
     )
 
 
 def _read_expected_checksum(url: str) -> str:
-    with _open_url(_validate_asset_url(url)) as response:
+    with _open_url(url) as response:
         text = response.read(4096).decode("ascii", errors="strict").strip()
     checksum = text.split()[0].lower() if text else ""
     if len(checksum) != 64 or any(character not in "0123456789abcdef" for character in checksum):
@@ -115,7 +106,7 @@ def download_update(
     digest = hashlib.sha256()
     received = 0
     try:
-        with _open_url(_validate_asset_url(update.executable_url)) as response, partial.open("wb") as output:
+        with _open_url(update.executable_url) as response, partial.open("wb") as output:
             total = int(response.headers.get("Content-Length", "0") or 0)
             while True:
                 chunk = response.read(DOWNLOAD_CHUNK_SIZE)
