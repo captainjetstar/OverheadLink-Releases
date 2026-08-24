@@ -85,5 +85,5 @@ jobs:
           if (gh release view $Tag 2>$null) {
             gh release upload $Tag $env:ASSET "$env:ASSET.sha256" --clobber
           } else {
-            gh release create $Tag $env:ASSET "$env:ASSET.sha256" --title "OverheadLink $Tag" --notes-file RELEASE_NOTES_039.md --latest
+            gh release create $Tag $env:ASSET "$env:ASSET.sha256" --title "OverheadLink $Tag" --notes-file RELEASE_NOTES_0310.md --latest
           }
