@@ -108,8 +108,21 @@ def _battery2_display() -> dict[str, Any]:
     }
 
 
+def _ensure_battery_display(payload: dict[str, Any]) -> bool:
+    boards = payload.get("boards", [])
+    elec = next((board for board in boards if isinstance(board, dict) and board.get("id") == "elec"), None)
+    if elec is None:
+        return False
+    peripherals = elec.setdefault("peripherals", [])
+    if any(isinstance(item, dict) and item.get("id") == "elec.bat2_voltage_display" for item in peripherals):
+        return False
+    peripherals.append(_battery2_display())
+    return True
+
+
 def migrate_profile(payload: dict[str, Any]) -> bool:
     if _migration_applied(payload):
+        _ensure_battery_display(payload)
         return False
 
     boards = payload.get("boards", [])
@@ -151,10 +164,7 @@ def migrate_profile(payload: dict[str, Any]) -> bool:
         elec["id"] = "elec"
         elec["name"] = "ELEC"
         elec["assignments"] = elec_assignments
-        peripherals = list(elec.get("peripherals", []))
-        if not any(isinstance(item, dict) and item.get("id") == "elec.bat2_voltage_display" for item in peripherals):
-            peripherals.append(_battery2_display())
-        elec["peripherals"] = peripherals
+        elec["peripherals"] = list(elec.get("peripherals", []))
 
         hyd = {
             "id": "hyd-fuel",
@@ -172,9 +182,6 @@ def migrate_profile(payload: dict[str, Any]) -> bool:
             assignments = elec.setdefault("assignments", [])
             if not any(isinstance(item, dict) and item.get("id") == "elec.idg1.switch" for item in assignments):
                 assignments.append(_idg1_assignment())
-            peripherals = elec.setdefault("peripherals", [])
-            if not any(isinstance(item, dict) and item.get("id") == "elec.bat2_voltage_display" for item in peripherals):
-                peripherals.append(_battery2_display())
         if hyd is not None:
             for assignment in hyd.get("assignments", []):
                 if not isinstance(assignment, dict):
@@ -185,6 +192,7 @@ def migrate_profile(payload: dict[str, Any]) -> bool:
                     assignment["status"] = "revised"
                     assignment["sourceRevision"] = "Dedicated HYD/FUEL Mega confirmed 2026-08-24"
 
+    _ensure_battery_display(payload)
     payload.setdefault("changeLog", []).append(
         {
             "timestampUtc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -195,17 +203,40 @@ def migrate_profile(payload: dict[str, Any]) -> bool:
     return True
 
 
+def _write_payload(path: Path, payload: dict[str, Any]) -> None:
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    temporary.replace(path)
+
+
 def prepare_profile() -> Path:
     path = writable_profile_path()
     payload = json.loads(path.read_text(encoding="utf-8"))
-    if migrate_profile(payload):
+    changed = migrate_profile(payload)
+    if changed:
         backup = path.with_name(path.stem + "_pre_0.3.7_backup" + path.suffix)
         if not backup.exists():
             shutil.copy2(path, backup)
-        temporary = path.with_suffix(path.suffix + ".tmp")
-        temporary.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-        temporary.replace(path)
+        _write_payload(path, payload)
+    elif _ensure_battery_display(payload):
+        _write_payload(path, payload)
     return path
+
+
+def _preserve_peripherals_after_save(profile_store: Any) -> None:
+    original_save = profile_store.save
+
+    def preserving_save(profile: Any, reason: str = "Profile updated") -> Any:
+        backup = original_save(profile, reason)
+        try:
+            payload = json.loads(profile_store.path.read_text(encoding="utf-8"))
+            if _ensure_battery_display(payload):
+                _write_payload(profile_store.path, payload)
+        except (OSError, json.JSONDecodeError):
+            pass
+        return backup
+
+    profile_store.save = preserving_save
 
 
 def install_app_extensions(app_class: type) -> None:
@@ -217,6 +248,7 @@ def install_app_extensions(app_class: type) -> None:
 
     def wrapped_init(self, *args: object, **kwargs: object) -> None:
         original_init(self, *args, **kwargs)
+        _preserve_peripherals_after_save(self.profile_store)
         try:
             from .remote import RemotePanelServer, install_remote_tab
 
