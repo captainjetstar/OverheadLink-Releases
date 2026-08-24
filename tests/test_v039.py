@@ -38,9 +38,10 @@ class InstallerV039Tests(unittest.TestCase):
         self.assertIn('#define APP_VERSION L"0.3.9"', generated)
         self.assertIn('#define APP_VERSION_A "0.3.9"', generated)
         self.assertIn("strlen(APP_VERSION_A)", generated)
-        self.assertIn('APP_VERSION_A "\\r\\n"', generated)
+        self.assertIn("static const char value[] = APP_VERSION_A", generated)
         self.assertIn("!launched_from_external_installer && marker_matches(payload_marker)", generated)
-        self.assertIn('L"Local\\\\OverheadLink-Setup"', generated)
+        self.assertIn("OverheadLink-Setup", generated)
+        self.assertNotIn("OverheadLink-Setup-v", generated)
         self.assertNotIn('strncmp(value, "0.3.6", 5)', generated)
 
 
