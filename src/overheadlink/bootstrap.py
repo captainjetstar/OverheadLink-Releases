@@ -122,8 +122,7 @@ def _ensure_battery_display(payload: dict[str, Any]) -> bool:
 
 def migrate_profile(payload: dict[str, Any]) -> bool:
     if _migration_applied(payload):
-        _ensure_battery_display(payload)
-        return False
+        return _ensure_battery_display(payload)
 
     boards = payload.get("boards", [])
     if not isinstance(boards, list):
