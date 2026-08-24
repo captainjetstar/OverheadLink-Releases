@@ -19,6 +19,7 @@ except ImportError:  # Allows profile/tests to run before pyserial is installed.
 
 
 ARDUINO_VIDS = {0x2341, 0x2A03, 0x1A86, 0x10C4, 0x0403}
+MAX_RX_BUFFER = 4096
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,6 +44,10 @@ class ConnectedBoard:
     def online(self) -> bool:
         return self.connection is not None and self.connection.running and monotonic() - self.last_heartbeat < 4.0
 
+    @property
+    def last_error(self) -> str:
+        return self.connection.last_error if self.connection is not None else ""
+
 
 class SerialConnection:
     def __init__(self, port: str, on_message: Callable[[str, ProtocolMessage], None], baudrate: int = 115200):
@@ -54,12 +59,16 @@ class SerialConnection:
         self._serial = None
         self._thread: threading.Thread | None = None
         self._writes: Queue[bytes] = Queue()
+        self._rx = bytearray()
         self.running = False
+        self.last_error = ""
 
     def start(self) -> None:
         if self.running:
             return
-        self._serial = serial.Serial(self.port, self.baudrate, timeout=0.15, write_timeout=0.5)
+        self.last_error = ""
+        self._rx.clear()
+        self._serial = serial.Serial(self.port, self.baudrate, timeout=0.08, write_timeout=0.5)
         self.running = True
         self._thread = threading.Thread(target=self._run, name=f"OverheadLink-{self.port}", daemon=True)
         self._thread.start()
@@ -69,39 +78,78 @@ class SerialConnection:
 
     def send(self, payload: bytes) -> None:
         if not self.running:
-            raise RuntimeError(f"Serial port {self.port} is not running")
-        self._writes.put(payload)
+            detail = f": {self.last_error}" if self.last_error else ""
+            raise RuntimeError(f"Serial port {self.port} is not running{detail}")
+        if not isinstance(payload, (bytes, bytearray)) or not payload:
+            raise ValueError("Serial payload must be non-empty bytes")
+        self._writes.put(bytes(payload))
 
     def close(self) -> None:
         self.running = False
-        if self._serial is not None:
+        serial_port = self._serial
+        if serial_port is not None:
             try:
-                self._serial.close()
+                serial_port.close()
             except Exception:
                 pass
+        thread = self._thread
+        if thread is not None and thread is not threading.current_thread():
+            thread.join(timeout=0.75)
+        self._thread = None
+        self._serial = None
+        self._rx.clear()
+
+    def _drain_writes(self) -> None:
+        assert self._serial is not None
+        while True:
+            try:
+                payload = self._writes.get_nowait()
+            except Empty:
+                break
+            self._serial.write(payload)
+
+    def _feed_rx(self, chunk: bytes) -> None:
+        if not chunk:
+            return
+        self._rx.extend(chunk)
+        if len(self._rx) > MAX_RX_BUFFER:
+            # A valid firmware line is tiny. Drop an unbounded/no-newline stream
+            # rather than allowing a bad serial device to grow memory forever.
+            self._rx.clear()
+            self.last_error = "Receive buffer overflow; malformed serial stream discarded"
+            return
+        while True:
+            newline_positions = [position for position in (self._rx.find(b"\n"), self._rx.find(b"\r")) if position >= 0]
+            if not newline_positions:
+                return
+            position = min(newline_positions)
+            raw = bytes(self._rx[:position]).strip()
+            del self._rx[: position + 1]
+            while self._rx[:1] in {b"\n", b"\r"}:
+                del self._rx[:1]
+            if not raw:
+                continue
+            try:
+                message = parse_message(raw)
+            except (ValueError, UnicodeError):
+                continue
+            self.on_message(self.port, message)
 
     def _run(self) -> None:
         assert self._serial is not None
         try:
             while self.running:
-                try:
-                    while True:
-                        self._serial.write(self._writes.get_nowait())
-                except Empty:
-                    pass
-                raw = self._serial.readline()
-                if not raw:
-                    continue
-                try:
-                    message = parse_message(raw)
-                except (ValueError, UnicodeError):
-                    continue
-                self.on_message(self.port, message)
-        except Exception:
+                self._drain_writes()
+                waiting = int(getattr(self._serial, "in_waiting", 0) or 0)
+                chunk = self._serial.read(max(1, min(waiting, 256)))
+                self._feed_rx(chunk)
+        except Exception as error:
+            self.last_error = str(error)
             self.running = False
         finally:
             try:
-                self._serial.close()
+                if self._serial is not None:
+                    self._serial.close()
             except Exception:
                 pass
 
@@ -151,13 +199,17 @@ class BoardManager:
                 existing = self.boards_by_port.get(port)
                 if existing and existing.connection and existing.connection.running:
                     continue
-                board = ConnectedBoard(port=port)
+                # Preserve the last known identity while a failed serial link is
+                # being reopened; it is replaced by the next IDENT packet.
+                board = existing or ConnectedBoard(port=port)
                 connection = SerialConnection(port, self._handle_message)
                 board.connection = connection
+                board.last_heartbeat = monotonic()
                 self.boards_by_port[port] = board
                 try:
                     connection.start()
-                except Exception:
+                except Exception as error:
+                    connection.last_error = str(error)
                     connection.close()
         return list(self.boards_by_port.values())
 
@@ -177,8 +229,9 @@ class BoardManager:
         return canonical_port(port) in self.ignored_ports
 
     def _handle_message(self, port: str, message: ProtocolMessage) -> None:
+        normalized = canonical_port(port)
         with self._lock:
-            board = self.boards_by_port.get(port)
+            board = self.boards_by_port.get(normalized)
             if board is None:
                 return
             board.last_heartbeat = monotonic()
@@ -189,16 +242,30 @@ class BoardManager:
 
     def by_profile_name(self, name: str) -> ConnectedBoard | None:
         wanted = name.casefold()
-        return next((board for board in self.boards_by_port.values() if board.board_name.casefold() == wanted), None)
+        matches = [board for board in self.boards_by_port.values() if board.board_name.casefold() == wanted and board.online]
+        return matches[0] if len(matches) == 1 else None
+
+    def duplicate_profile_ports(self, name: str) -> list[str]:
+        wanted = name.casefold()
+        return sorted(
+            board.port
+            for board in self.boards_by_port.values()
+            if board.board_name.casefold() == wanted and board.online
+        )
 
     def send_to_profile(self, name: str, message_type: str, *parts: object) -> None:
         board = self.by_profile_name(name)
         if board is None or not board.online or board.connection is None:
+            duplicates = self.duplicate_profile_ports(name)
+            if len(duplicates) > 1:
+                raise RuntimeError(f"Board identity {name} is duplicated on {', '.join(duplicates)}")
             raise RuntimeError(f"Board {name} is not online")
         board.connection.send(encode_message(message_type, *parts))
 
     def stop(self) -> None:
         with self._lock:
-            for board in self.boards_by_port.values():
-                if board.connection:
-                    board.connection.close()
+            boards = list(self.boards_by_port.values())
+            self.boards_by_port.clear()
+        for board in boards:
+            if board.connection:
+                board.connection.close()
