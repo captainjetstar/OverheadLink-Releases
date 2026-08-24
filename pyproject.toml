@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "overheadlink"
+version = "0.3.4"
+description = "Standalone A320 overhead hardware bridge for MSFS 2024 and Fenix"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Private project" }
+dependencies = [
+  "pyserial>=3.5,<4",
+]
+
+[project.optional-dependencies]
+build = ["pyinstaller>=6.10,<7"]
+
+[project.scripts]
+overheadlink = "overheadlink.app:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+overheadlink = ["*.json"]

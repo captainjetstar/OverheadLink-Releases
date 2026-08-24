@@ -1,0 +1,62 @@
+name: Build and publish OverheadLink
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Download embedded runtimes
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force vendor | Out-Null
+          Invoke-WebRequest https://www.python.org/ftp/python/3.12.10/python-3.12.10-amd64.exe -OutFile vendor/python-3.12.10-amd64.exe
+          python -m pip download pyserial==3.5 --no-deps --dest vendor
+          python -m pip download SimConnect==0.4.26 --no-deps --dest vendor/simconnect-package
+          python -c "import pathlib,zipfile; wheel=next(pathlib.Path('vendor/simconnect-package').glob('*.whl')); z=zipfile.ZipFile(wheel); member=next(n for n in z.namelist() if n.endswith('/SimConnect.dll')); pathlib.Path('vendor/SimConnect.dll').write_bytes(z.read(member))"
+
+      - name: Test
+        run: python -m unittest discover -s tests -v
+
+      - name: Build native setup launcher
+        shell: cmd
+        run: |
+          python installer\generate_icon.py
+          rc /nologo /fo installer\overheadlink.res installer\bootstrap.rc
+          cl /nologo /O2 /W3 /DUNICODE /D_UNICODE /MT /Fo:installer\bootstrap.obj /c installer\bootstrap.c
+          link /nologo /SUBSYSTEM:WINDOWS /OUT:installer\OverheadLink_base.exe installer\bootstrap.obj installer\overheadlink.res bcrypt.lib shell32.lib ole32.lib comctl32.lib user32.lib gdi32.lib advapi32.lib
+
+      - name: Package one-file executable
+        shell: pwsh
+        run: |
+          $Version = python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])"
+          $Name = "OverheadLink_v${Version}_Windows_x64.exe"
+          python installer/package_executable.py installer/OverheadLink_base.exe . $Name
+          python installer/verify_executable.py $Name
+          $Hash = (Get-FileHash $Name -Algorithm SHA256).Hash.ToLower()
+          "$Hash  $Name" | Set-Content -NoNewline -Encoding ascii "$Name.sha256"
+          "VERSION=$Version" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "ASSET=$Name" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Publish GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $Tag = "v$env:VERSION"
+          if (gh release view $Tag 2>$null) {
+            gh release upload $Tag $env:ASSET "$env:ASSET.sha256" --clobber
+          } else {
+            gh release create $Tag $env:ASSET "$env:ASSET.sha256" --title "OverheadLink $Tag" --notes-file RELEASE_NOTES.md --latest
+          }

@@ -1,0 +1,72 @@
+# OverheadLink v0.3.4 one-file Windows build
+
+## New in v0.3.4
+
+- Added automatic update checks through the public `captainjetstar/OverheadLink-Releases` GitHub repository.
+- Added an **Updates** tab with installed/latest versions, release notes, manual checking, and one-click installation.
+- Every downloaded executable must match its published SHA-256 checksum and embedded OverheadLink package signature.
+- Updates close OverheadLink, run the existing automatic installer, and reopen the application without a manual uninstall.
+
+## Fixed in v0.3.3
+
+- Corrected the MobiFlight client-data subscription period from invalid value `5` to SimConnect's `ON_SET` value `3`.
+- Added automatic MobiFlight client-registration retries while MSFS finishes loading the WASM module.
+- Added exact SimConnect exception numbers to the connection status instead of hiding them behind a generic WASM timeout.
+- Replaced the incorrect reinstall instruction with retry-focused diagnostics when the module is already enabled.
+
+## Fixed in v0.3.2
+
+- Added the 64-bit native SimConnect client runtime to the one-file executable.
+- SimConnect now loads from the embedded application folder with dependency-safe Windows DLL search rules.
+- Added automatic fallback discovery for common MobiFlight installation paths and the `MSFS2024_SDK` path.
+- Replaced the unhelpful Windows loader error with a focused SimConnect diagnostic.
+
+## Fixed in v0.3.1
+
+- Replaced the connection-page selection controls with a reliable right-click **Assign to…** menu.
+- The row beneath the mouse is selected before its menu opens, so periodic USB refreshes cannot change the assignment target.
+- Added persistent **Ignore this COM port** support for SL3, Rowsfire, MobiFlight, and other unrelated serial devices.
+- Ignoring a port closes it immediately so another application can use it; ignored ports are not reopened during automatic scans or after restart.
+- Ignored entries remain visible and can be restored with **Use this COM port in OverheadLink**.
+- Preserved the selected row during the five-second connection-list refresh.
+
+## New in v0.3
+
+- One 64-bit Windows executable containing the application, the official Python 3.12.10 offline installer, and PySerial 3.5.
+- Fully automatic per-user first-run setup with no administrator rights, PowerShell steps, or separate downloads.
+- Automatic background connection to MSFS 2024 / Fenix with retry when the simulator is not running yet.
+- Automatic validated-map loading whenever an identified Mega comes online.
+- Automatic status query for the separate `BACKLIGHT-NANO`; its `FULL LIGHT`, `HALF DIM`, and `DAY TIME DIM` options remain available in the app.
+
+The setup executable is not code-signed. Windows SmartScreen can therefore display an unknown-publisher warning until a commercial code-signing certificate is added.
+
+# Previous v0.2 development build
+
+## Included
+
+- Standalone Windows desktop controller and PyInstaller build script.
+- Stable EEPROM identities and automatic USB rescanning for Mega 2560 and backlight Nano controllers.
+- Recovered A320/Fenix profile: 6 logical board profiles, 166 assignments, 72 verified annunciator subscriptions, and 61 verified input commands.
+- Zero profile pin conflicts or reserved-pin errors in the shipped seed profile.
+- Cross-board two-confirmation input learning with detected polarity.
+- Full-travel analogue discovery with endpoint, direction, range, and noise calibration.
+- Safe output-pin search and reversible swap within each board's validated output pool.
+- Native MSFS 2024 SimConnect Client Data transport with private MobiFlight-WASM channels.
+- Fenix RPN command dispatch and live LVar-to-Korry feedback handling.
+- Separate Nano firmware with automatic startup illumination and persistent `FULL LIGHT`, `HALF DIM`, and `DAY TIME DIM` presets.
+- Timestamped profile backups, change log, conflict validation, offline Fenix simulation, and debug-log export.
+
+## Verification completed here
+
+- 17 automated tests pass.
+- Python source and helper scripts compile successfully.
+- Seed profile contains 166 assignments across 6 profiles with 0 validation errors and 0 warnings.
+- SimConnect/WASM registration, command, subscription, and feedback flow pass against an in-memory Client Data transport.
+
+## Physical bench verification still required
+
+- Compile/upload both Arduino sketches using the actual Mega/Nano board packages and Adafruit NeoPixel library.
+- Connect to the installed MSFS 2024 SimConnect runtime and MobiFlight WASM module.
+- Verify the Fenix A320 version currently installed still exposes each recovered RPN/LVar mapping.
+- Confirm each physical Korry upper/lower legend and the temperature-potentiometer electrical range.
+- Confirm the Nano LED count, colour, PSU current capacity, and preferred brightness values on the real panel.

@@ -1,0 +1,2807 @@
+{
+  "schemaVersion": 1,
+  "profileId": "a320-fenix-forward-overhead-au",
+  "name": "A320 Forward Overhead — Fenix MSFS 2024",
+  "aircraft": "Fenix A319/A320/A321",
+  "boards": [
+    {
+      "id": "elec-hyd-fuel",
+      "name": "ELEC-HYD-FUEL",
+      "kind": "mega2560",
+      "optional": false,
+      "expectedHardware": "Arduino Mega 2560",
+      "assignments": [
+        {
+          "id": "hyd.elec_pump.upper",
+          "control": "HYD electrical pump upper annunciator",
+          "pin": "D2",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_HYD_BLUE_ELEC_PUMP_U)"
+          }
+        },
+        {
+          "id": "hyd.elec_pump.lower",
+          "control": "HYD electrical pump lower annunciator",
+          "pin": "D3",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_HYD_BLUE_ELEC_PUMP_L)"
+          }
+        },
+        {
+          "id": "hyd.elec_pump.switch",
+          "control": "HYD electrical pump switch",
+          "pin": "D4",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_HYD_BLUE_ELEC_PUMP_Anim) 2 == if{ 0 } els{ 2 } (>L:S_OH_HYD_BLUE_ELEC_PUMP_Anim) (L:S_OH_HYD_BLUE_ELEC_PUMP, Bool) ! (>L:S_OH_HYD_BLUE_ELEC_PUMP)"
+          }
+        },
+        {
+          "id": "hyd.eng2_pump.upper",
+          "control": "HYD ENG 2 pump upper annunciator",
+          "pin": "D5",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_HYD_ENG_2_PUMP_U)"
+          }
+        },
+        {
+          "id": "hyd.eng2_pump.lower",
+          "control": "HYD ENG 2 pump lower annunciator",
+          "pin": "D6",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_HYD_ENG_2_PUMP_L)"
+          }
+        },
+        {
+          "id": "hyd.eng2_pump.switch",
+          "control": "HYD ENG 2 pump switch",
+          "pin": "D7",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_HYD_ENG_2_PUMP_Anim) 2 == if{ 0 } els{ 2 } (>L:S_OH_HYD_ENG_2_PUMP_Anim) (L:S_OH_HYD_ENG_2_PUMP, Bool) ! (>L:S_OH_HYD_ENG_2_PUMP)"
+          }
+        },
+        {
+          "id": "fuel.right2.upper",
+          "control": "Right tank pump 2 upper annunciator",
+          "pin": "D9",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_FUEL_RIGHT_2_U)"
+          }
+        },
+        {
+          "id": "fuel.right2.lower",
+          "control": "Right tank pump 2 lower annunciator",
+          "pin": "D8",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_FUEL_RIGHT_2_L)"
+          }
+        },
+        {
+          "id": "fuel.right2.switch",
+          "control": "Right tank pump 2 switch",
+          "pin": "D10",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_FUEL_RIGHT_2_Anim) 2 == if{ 0 } els{ 2 } (>L:S_OH_FUEL_RIGHT_2_Anim) (L:S_OH_FUEL_RIGHT_2, Bool) ! (>L:S_OH_FUEL_RIGHT_2)"
+          }
+        },
+        {
+          "id": "fuel.right1.upper",
+          "control": "Right tank pump 1 upper annunciator",
+          "pin": "D12",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_FUEL_RIGHT_1_U)"
+          }
+        },
+        {
+          "id": "fuel.right1.lower",
+          "control": "Right tank pump 1 lower annunciator",
+          "pin": "D11",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_FUEL_RIGHT_1_L)"
+          }
+        },
+        {
+          "id": "fuel.right1.switch",
+          "control": "Right tank pump 1 switch",
+          "pin": "D13",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_FUEL_RIGHT_1_Anim) 2 == if{ 0 } els{ 2 } (>L:S_OH_FUEL_RIGHT_1_Anim) (L:S_OH_FUEL_RIGHT_1, Bool) ! (>L:S_OH_FUEL_RIGHT_1)"
+          }
+        },
+        {
+          "id": "fuel.center2.upper",
+          "control": "Centre tank pump 2 upper annunciator",
+          "pin": "D14",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_FUEL_CENTER_2_U)"
+          }
+        },
+        {
+          "id": "fuel.center2.lower",
+          "control": "Centre tank pump 2 lower annunciator",
+          "pin": "D15",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_FUEL_CENTER_2_L)"
+          }
+        },
+        {
+          "id": "fuel.center2.switch",
+          "control": "Centre tank pump 2 switch",
+          "pin": "D16",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_FUEL_CENTER_2_Anim) 2 == if{ 0 } els{ 2 } (>L:S_OH_FUEL_CENTER_2_Anim) (L:S_OH_FUEL_CENTER_2, Bool) ! (>L:S_OH_FUEL_CENTER_2)"
+          }
+        },
+        {
+          "id": "fuel.center1.upper",
+          "control": "Centre tank pump 1 upper annunciator",
+          "pin": "D18",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_FUEL_CENTER_1_U)"
+          }
+        },
+        {
+          "id": "fuel.center1.lower",
+          "control": "Centre tank pump 1 lower annunciator",
+          "pin": "D17",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_FUEL_CENTER_1_L)"
+          }
+        },
+        {
+          "id": "fuel.center1.switch",
+          "control": "Centre tank pump 1 switch",
+          "pin": "D19",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_FUEL_CENTER_1_Anim) 2 == if{ 0 } els{ 2 } (>L:S_OH_FUEL_CENTER_1_Anim) (L:S_OH_FUEL_CENTER_1, Bool) ! (>L:S_OH_FUEL_CENTER_1)"
+          }
+        },
+        {
+          "id": "fuel.left2.upper",
+          "control": "Left tank pump 2 upper annunciator",
+          "pin": "D21",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_FUEL_LEFT_2_U)"
+          }
+        },
+        {
+          "id": "fuel.left2.lower",
+          "control": "Left tank pump 2 lower annunciator",
+          "pin": "D20",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_FUEL_LEFT_2_L)"
+          }
+        },
+        {
+          "id": "fuel.left2.switch",
+          "control": "Left tank pump 2 switch",
+          "pin": "D22",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_FUEL_LEFT_2_Anim) 2 == if{ 0 } els{ 2 } (>L:S_OH_FUEL_LEFT_2_Anim) (L:S_OH_FUEL_LEFT_2, Bool) ! (>L:S_OH_FUEL_LEFT_2)"
+          }
+        },
+        {
+          "id": "fuel.left1.upper",
+          "control": "Left tank pump 1 upper annunciator",
+          "pin": "D24",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_FUEL_LEFT_1_U)"
+          }
+        },
+        {
+          "id": "fuel.left1.lower",
+          "control": "Left tank pump 1 lower annunciator",
+          "pin": "D23",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_FUEL_LEFT_1_L)"
+          }
+        },
+        {
+          "id": "fuel.left1.switch",
+          "control": "Left tank pump 1 switch",
+          "pin": "D25",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_FUEL_LEFT_1_Anim) 2 == if{ 0 } els{ 2 } (>L:S_OH_FUEL_LEFT_1_Anim) (L:S_OH_FUEL_LEFT_1, Bool) ! (>L:S_OH_FUEL_LEFT_1)"
+          }
+        },
+        {
+          "id": "fuel.xfeed.upper",
+          "control": "Fuel crossfeed upper annunciator",
+          "pin": "D26",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_FUEL_XFEED_U)"
+          }
+        },
+        {
+          "id": "fuel.xfeed.lower",
+          "control": "Fuel crossfeed lower annunciator",
+          "pin": "D27",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_FUEL_XFEED_L)"
+          }
+        },
+        {
+          "id": "fuel.xfeed.switch",
+          "control": "Fuel crossfeed switch",
+          "pin": "D28",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_FUEL_XFEED_Anim) 2 == if{ 0 } els{ 2 } (>L:S_OH_FUEL_XFEED_Anim) (L:S_OH_FUEL_XFEED, Bool) ! (>L:S_OH_FUEL_XFEED)"
+          }
+        },
+        {
+          "id": "hyd.eng1_pump.upper",
+          "control": "HYD ENG 1 pump upper annunciator",
+          "pin": "D29",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_HYD_ENG_1_PUMP_U)"
+          }
+        },
+        {
+          "id": "hyd.eng1_pump.lower",
+          "control": "HYD ENG 1 pump lower annunciator",
+          "pin": "D30",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_HYD_ENG_1_PUMP_L)"
+          }
+        },
+        {
+          "id": "hyd.eng1_pump.switch",
+          "control": "HYD ENG 1 pump switch",
+          "pin": "D31",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_HYD_ENG_1_PUMP_Anim) 2 == if{ 0 } els{ 2 } (>L:S_OH_HYD_ENG_1_PUMP_Anim) (L:S_OH_HYD_ENG_1_PUMP, Bool) ! (>L:S_OH_HYD_ENG_1_PUMP)"
+          }
+        },
+        {
+          "id": "elec.galley.upper",
+          "control": "Galley & Cab upper annunciator",
+          "pin": "D32",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_ELEC_GALY_U)"
+          }
+        },
+        {
+          "id": "elec.galley.lower",
+          "control": "Galley & Cab lower annunciator",
+          "pin": "D33",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_ELEC_GALY_L)"
+          }
+        },
+        {
+          "id": "elec.galley.switch",
+          "control": "Galley & Cab switch",
+          "pin": "D34",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_ELEC_GALY) ! (>L:S_OH_ELEC_GALY) 1 (>L:S_OH_ELEC_GALY_Anim)",
+            "onRelease": "(L:S_OH_ELEC_GALY) 0 == if{ 0 (>L:S_OH_ELEC_GALY_Anim) } (L:S_OH_ELEC_GALY) 1 == if{ 2 (>L:S_OH_ELEC_GALY_Anim) }"
+          }
+        },
+        {
+          "id": "elec.gen1.upper",
+          "control": "GEN 1 upper annunciator",
+          "pin": "D35",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_ELEC_GEN1_U)"
+          }
+        },
+        {
+          "id": "elec.gen1.lower",
+          "control": "GEN 1 lower annunciator",
+          "pin": "D36",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_ELEC_GEN1_L)"
+          }
+        },
+        {
+          "id": "elec.gen1.switch",
+          "control": "GEN 1 switch",
+          "pin": "D37",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_ELEC_GEN1_Anim) 2 == if{ 0 } els{ 2 } (>L:S_OH_ELEC_GEN1_Anim) (L:S_OH_ELEC_GEN1, Bool) ! (>L:S_OH_ELEC_GEN1)"
+          }
+        },
+        {
+          "id": "elec.apu_gen.upper",
+          "control": "APU GEN upper annunciator",
+          "pin": "D39",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_ELEC_APU_GENERATOR_U)"
+          }
+        },
+        {
+          "id": "elec.apu_gen.lower",
+          "control": "APU GEN lower annunciator",
+          "pin": "D38",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_ELEC_APU_GENERATOR_L)"
+          }
+        },
+        {
+          "id": "elec.apu_gen.switch",
+          "control": "APU GEN switch",
+          "pin": "D40",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_ELEC_APU_GENERATOR) ! (>L:S_OH_ELEC_APU_GENERATOR) 1 (>L:S_OH_ELEC_APU_GENERATOR_Anim)",
+            "onRelease": "(L:S_OH_ELEC_APU_GENERATOR) 0 == if{ 0 (>L:S_OH_ELEC_APU_GENERATOR_Anim) } (L:S_OH_ELEC_APU_GENERATOR) 1 == if{ 2 (>L:S_OH_ELEC_APU_GENERATOR_Anim) }"
+          }
+        },
+        {
+          "id": "elec.bat1.upper",
+          "control": "BAT 1 upper annunciator",
+          "pin": "D41",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_ELEC_BAT1_U)"
+          }
+        },
+        {
+          "id": "elec.bat1.lower",
+          "control": "BAT 1 lower annunciator",
+          "pin": "D42",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_ELEC_BAT1_L)"
+          }
+        },
+        {
+          "id": "elec.bat1.switch",
+          "control": "BAT 1 switch",
+          "pin": "D44",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_ELEC_BAT1) ! (>L:S_OH_ELEC_BAT1) 1 (>L:S_OH_ELEC_BAT1_Anim)",
+            "onRelease": "(L:S_OH_ELEC_BAT1) 0 == if{ 0 (>L:S_OH_ELEC_BAT1_Anim) } (L:S_OH_ELEC_BAT1) 1 == if{ 2 (>L:S_OH_ELEC_BAT1_Anim) }"
+          }
+        },
+        {
+          "id": "elec.bat2.upper",
+          "control": "BAT 2 upper annunciator",
+          "pin": "D45",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_ELEC_BAT2_U)"
+          }
+        },
+        {
+          "id": "elec.bat2.lower",
+          "control": "BAT 2 lower annunciator",
+          "pin": "D46",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_ELEC_BAT2_L)"
+          }
+        },
+        {
+          "id": "elec.bat2.switch",
+          "control": "BAT 2 switch",
+          "pin": "D47",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_ELEC_BAT2) ! (>L:S_OH_ELEC_BAT2) 1 (>L:S_OH_ELEC_BAT2_Anim)",
+            "onRelease": "(L:S_OH_ELEC_BAT2) 0 == if{ 0 (>L:S_OH_ELEC_BAT2_Anim) } (L:S_OH_ELEC_BAT2) 1 == if{ 2 (>L:S_OH_ELEC_BAT2_Anim) }"
+          }
+        },
+        {
+          "id": "elec.bus_tie.upper",
+          "control": "BUS TIE upper annunciator",
+          "pin": "D48",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "0"
+          },
+          "notes": "Upper BUS TIE annunciator intentionally has no Fenix variable; output remains off"
+        },
+        {
+          "id": "elec.bus_tie.lower",
+          "control": "BUS TIE lower annunciator",
+          "pin": "D49",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_ELEC_BUSTIE_L)"
+          },
+          "notes": "Upper BUS TIE annunciator intentionally has no Fenix variable; output remains off"
+        },
+        {
+          "id": "elec.bus_tie.switch",
+          "control": "BUS TIE switch",
+          "pin": "D50",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_ELEC_BUSTIE_Anim) 2 == if{ 0 } els{ 2 } (>L:S_OH_ELEC_BUSTIE_Anim) (L:S_OH_ELEC_BUSTIE, Bool) ! (>L:S_OH_ELEC_BUSTIE)"
+          },
+          "notes": "Upper BUS TIE annunciator intentionally has no Fenix variable; output remains off"
+        },
+        {
+          "id": "elec.ext_pwr.upper",
+          "control": "EXT PWR upper annunciator",
+          "pin": "D51",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_ELEC_EXT_PWR_U)"
+          }
+        },
+        {
+          "id": "elec.ext_pwr.lower",
+          "control": "EXT PWR lower annunciator",
+          "pin": "D52",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_ELEC_EXT_PWR_L)"
+          }
+        },
+        {
+          "id": "elec.ext_pwr.switch",
+          "control": "EXT PWR switch",
+          "pin": "D53",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_ELEC_EXT_PWR, number) 2 + (>L:S_OH_ELEC_EXT_PWR, number)"
+          }
+        },
+        {
+          "id": "elec.gen2.upper",
+          "control": "GEN 2 upper annunciator",
+          "pin": "A14",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_ELEC_GEN2_U)"
+          }
+        },
+        {
+          "id": "elec.gen2.lower",
+          "control": "GEN 2 lower annunciator",
+          "pin": "A15",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_ELEC_GEN2_L)"
+          }
+        },
+        {
+          "id": "elec.gen2.switch",
+          "control": "GEN 2 switch",
+          "pin": "A13",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "User confirmed pin map",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_ELEC_GEN2_Anim) 2 == if{ 0 } els{ 2 } (>L:S_OH_ELEC_GEN2_Anim) (L:S_OH_ELEC_GEN2, Bool) ! (>L:S_OH_ELEC_GEN2)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "air-cond",
+      "name": "AIR-COND",
+      "kind": "mega2560",
+      "optional": false,
+      "expectedHardware": "Arduino Mega 2560",
+      "assignments": [
+        {
+          "id": "pneu.pack1.upper",
+          "control": "PACK 1 upper annunciator",
+          "pin": "D2",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated AIR-COND latest revisions 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_PNEUMATIC_PACK_1_U)"
+          }
+        },
+        {
+          "id": "pneu.pack1.lower",
+          "control": "PACK 1 lower annunciator",
+          "pin": "D3",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated AIR-COND latest revisions 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_PNEUMATIC_PACK_1_L)"
+          }
+        },
+        {
+          "id": "pneu.pack1.switch",
+          "control": "PACK 1 switch",
+          "pin": "D4",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated AIR-COND latest revisions 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_PNEUMATIC_PACK_1) ! (>L:S_OH_PNEUMATIC_PACK_1)"
+          }
+        },
+        {
+          "id": "pneu.eng1_bleed.upper",
+          "control": "ENG 1 BLEED upper annunciator",
+          "pin": "D7",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated AIR-COND latest revisions 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_PNEUMATIC_ENG1_BLEED_U)"
+          },
+          "notes": "Upper/lower order incorporates the requested ENG 1 BLEED reversal"
+        },
+        {
+          "id": "pneu.eng1_bleed.lower",
+          "control": "ENG 1 BLEED lower annunciator",
+          "pin": "D6",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated AIR-COND latest revisions 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_PNEUMATIC_ENG1_BLEED_L)"
+          },
+          "notes": "Upper/lower order incorporates the requested ENG 1 BLEED reversal"
+        },
+        {
+          "id": "pneu.eng1_bleed.switch",
+          "control": "ENG 1 BLEED switch",
+          "pin": "D5",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated AIR-COND latest revisions 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_PNEUMATIC_ENG1_BLEED) ! (>L:S_OH_PNEUMATIC_ENG1_BLEED)"
+          },
+          "notes": "Upper/lower order incorporates the requested ENG 1 BLEED reversal"
+        },
+        {
+          "id": "pneu.ram_air.upper",
+          "control": "RAM AIR upper annunciator",
+          "pin": "D8",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated AIR-COND latest revisions 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_PNEUMATIC_RAM_AIR_U)"
+          }
+        },
+        {
+          "id": "pneu.ram_air.lower",
+          "control": "RAM AIR lower annunciator",
+          "pin": "D9",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated AIR-COND latest revisions 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_PNEUMATIC_RAM_AIR_L)"
+          }
+        },
+        {
+          "id": "pneu.ram_air.switch",
+          "control": "RAM AIR switch",
+          "pin": "D10",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated AIR-COND latest revisions 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_PNEUMATIC_RAM_AIR) ! (>L:S_OH_PNEUMATIC_RAM_AIR)"
+          }
+        },
+        {
+          "id": "pneu.apu_bleed.upper",
+          "control": "APU BLEED upper annunciator",
+          "pin": "D11",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated AIR-COND latest revisions 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_PNEUMATIC_APU_BLEED_U)"
+          },
+          "notes": "Latest APU BLEED switch is A4; D13 is superseded"
+        },
+        {
+          "id": "pneu.apu_bleed.lower",
+          "control": "APU BLEED lower annunciator",
+          "pin": "D12",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated AIR-COND latest revisions 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_PNEUMATIC_APU_BLEED_L)"
+          },
+          "notes": "Latest APU BLEED switch is A4; D13 is superseded"
+        },
+        {
+          "id": "pneu.apu_bleed.switch",
+          "control": "APU BLEED switch",
+          "pin": "A4",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated AIR-COND latest revisions 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_PNEUMATIC_APU_BLEED) ! (>L:S_OH_PNEUMATIC_APU_BLEED)"
+          },
+          "notes": "Latest APU BLEED switch is A4; D13 is superseded"
+        },
+        {
+          "id": "pneu.eng2_bleed.upper",
+          "control": "ENG 2 BLEED upper annunciator",
+          "pin": "D14",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated AIR-COND latest revisions 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_PNEUMATIC_ENG2_BLEED_U)"
+          }
+        },
+        {
+          "id": "pneu.eng2_bleed.lower",
+          "control": "ENG 2 BLEED lower annunciator",
+          "pin": "D15",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated AIR-COND latest revisions 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_PNEUMATIC_ENG2_BLEED_L)"
+          }
+        },
+        {
+          "id": "pneu.eng2_bleed.switch",
+          "control": "ENG 2 BLEED switch",
+          "pin": "D16",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated AIR-COND latest revisions 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_PNEUMATIC_ENG2_BLEED) ! (>L:S_OH_PNEUMATIC_ENG2_BLEED)"
+          }
+        },
+        {
+          "id": "pneu.pack2.upper",
+          "control": "PACK 2 upper annunciator",
+          "pin": "D17",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated AIR-COND latest revisions 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_PNEUMATIC_PACK_2_U)"
+          }
+        },
+        {
+          "id": "pneu.pack2.lower",
+          "control": "PACK 2 lower annunciator",
+          "pin": "D18",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated AIR-COND latest revisions 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_PNEUMATIC_PACK_2_L)"
+          }
+        },
+        {
+          "id": "pneu.pack2.switch",
+          "control": "PACK 2 switch",
+          "pin": "D19",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated AIR-COND latest revisions 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_PNEUMATIC_PACK_2) ! (>L:S_OH_PNEUMATIC_PACK_2)"
+          }
+        },
+        {
+          "id": "pneu.hot_air.upper",
+          "control": "HOT AIR upper annunciator",
+          "pin": "D20",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated AIR-COND latest revisions 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_PNEUMATIC_HOT_AIR_U)"
+          }
+        },
+        {
+          "id": "pneu.hot_air.lower",
+          "control": "HOT AIR lower annunciator",
+          "pin": "D21",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated AIR-COND latest revisions 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_PNEUMATIC_HOT_AIR_L)"
+          }
+        },
+        {
+          "id": "pneu.hot_air.switch",
+          "control": "HOT AIR switch",
+          "pin": "D22",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated AIR-COND latest revisions 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_PNEUMATIC_HOT_AIR) ! (>L:S_OH_PNEUMATIC_HOT_AIR) 1 (>L:S_OH_PNEUMATIC_HOT_AIR_Anim)",
+            "onRelease": "(L:S_OH_PNEUMATIC_HOT_AIR) 0 == if{ 0 (>L:S_OH_PNEUMATIC_HOT_AIR_Anim) } (L:S_OH_PNEUMATIC_HOT_AIR) 1 == if{ 2 (>L:S_OH_PNEUMATIC_HOT_AIR_Anim) }"
+          }
+        },
+        {
+          "id": "temp.aft",
+          "control": "Aft cabin temperature",
+          "pin": "A1",
+          "mode": "analog_input",
+          "role": "potentiometer",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated AIR-COND latest revisions 2026-08-21",
+          "sim": {
+            "verified": false
+          },
+          "calibration": {
+            "minimum": 0,
+            "maximum": 1023,
+            "inverted": false
+          }
+        },
+        {
+          "id": "temp.cockpit",
+          "control": "Cockpit temperature",
+          "pin": "A2",
+          "mode": "analog_input",
+          "role": "potentiometer",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated AIR-COND latest revisions 2026-08-21",
+          "sim": {
+            "verified": false
+          },
+          "calibration": {
+            "minimum": 0,
+            "maximum": 1023,
+            "inverted": false
+          }
+        },
+        {
+          "id": "temp.forward",
+          "control": "Forward cabin temperature",
+          "pin": "A3",
+          "mode": "analog_input",
+          "role": "potentiometer",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated AIR-COND latest revisions 2026-08-21",
+          "sim": {
+            "verified": false
+          },
+          "calibration": {
+            "minimum": 0,
+            "maximum": 1023,
+            "inverted": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "ext-light-overhead",
+      "name": "EXT-LIGHT-OVERHEAD",
+      "kind": "mega2560",
+      "optional": false,
+      "expectedHardware": "Arduino Mega 2560",
+      "assignments": [
+        {
+          "id": "cabin.press.upper",
+          "control": "CABIN PRESSURE upper annunciator",
+          "pin": "D3",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": false,
+            "feedback": "(L:I_OH_CAB_PRESS_U)"
+          }
+        },
+        {
+          "id": "cabin.press.lower",
+          "control": "CABIN PRESSURE lower annunciator",
+          "pin": "D5",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": false,
+            "feedback": "(L:I_OH_CAB_PRESS_L)"
+          }
+        },
+        {
+          "id": "cabin.press.switch",
+          "control": "CABIN PRESSURE switch",
+          "pin": "D6",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": false,
+            "onPress": "(L:S_OH_CAB_PRESS) ! (>L:S_OH_CAB_PRESS)"
+          }
+        },
+        {
+          "id": "ice.wing.upper",
+          "control": "WING ANTI-ICE upper annunciator",
+          "pin": "D22",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_PNEUMATIC_WING_ANTI_ICE_U)"
+          }
+        },
+        {
+          "id": "ice.wing.lower",
+          "control": "WING ANTI-ICE lower annunciator",
+          "pin": "D23",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_PNEUMATIC_WING_ANTI_ICE_L)"
+          }
+        },
+        {
+          "id": "ice.wing.switch",
+          "control": "WING ANTI-ICE switch",
+          "pin": "D21",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_PNEUMATIC_WING_ANTI_ICE) ! (>L:S_OH_PNEUMATIC_WING_ANTI_ICE) 1 (>L:S_OH_PNEUMATIC_WING_ANTI_ICE_Anim)",
+            "onRelease": "(L:S_OH_PNEUMATIC_WING_ANTI_ICE) 0 == if{ 0 (>L:S_OH_PNEUMATIC_WING_ANTI_ICE_Anim) } (L:S_OH_PNEUMATIC_WING_ANTI_ICE) 1 == if{ 2 (>L:S_OH_PNEUMATIC_WING_ANTI_ICE_Anim) }"
+          }
+        },
+        {
+          "id": "ice.probe.upper",
+          "control": "PROBE/WINDOW HEAT upper annunciator",
+          "pin": "D24",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_PROBE_HEAT_U)"
+          }
+        },
+        {
+          "id": "ice.probe.lower",
+          "control": "PROBE/WINDOW HEAT lower annunciator",
+          "pin": "D26",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_PROBE_HEAT_L)"
+          }
+        },
+        {
+          "id": "ice.probe.switch",
+          "control": "PROBE/WINDOW HEAT switch",
+          "pin": "D25",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_PROBE_HEAT) ! (>L:S_OH_PROBE_HEAT) 1 (>L:S_OH_PROBE_HEAT_Anim)",
+            "onRelease": "(L:S_OH_PROBE_HEAT) 0 == if{ 0 (>L:S_OH_PROBE_HEAT_Anim) } (L:S_OH_PROBE_HEAT) 1 == if{ 2 (>L:S_OH_PROBE_HEAT_Anim) }"
+          }
+        },
+        {
+          "id": "ice.eng2.upper",
+          "control": "ENG 2 ANTI-ICE upper annunciator",
+          "pin": "D28",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_PNEUMATIC_ENG2_ANTI_ICE_U)"
+          }
+        },
+        {
+          "id": "ice.eng2.lower",
+          "control": "ENG 2 ANTI-ICE lower annunciator",
+          "pin": "D29",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_PNEUMATIC_ENG2_ANTI_ICE_L)"
+          }
+        },
+        {
+          "id": "ice.eng2.switch",
+          "control": "ENG 2 ANTI-ICE switch",
+          "pin": "D27",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_PNEUMATIC_ENG2_ANTI_ICE) ! (>L:S_OH_PNEUMATIC_ENG2_ANTI_ICE)"
+          }
+        },
+        {
+          "id": "ice.eng1.upper",
+          "control": "ENG 1 ANTI-ICE upper annunciator",
+          "pin": "D32",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_PNEUMATIC_ENG1_ANTI_ICE_U)"
+          }
+        },
+        {
+          "id": "ice.eng1.lower",
+          "control": "ENG 1 ANTI-ICE lower annunciator",
+          "pin": "D36",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_PNEUMATIC_ENG1_ANTI_ICE_L)"
+          }
+        },
+        {
+          "id": "ice.eng1.switch",
+          "control": "ENG 1 ANTI-ICE switch",
+          "pin": "D30",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_PNEUMATIC_ENG1_ANTI_ICE) ! (>L:S_OH_PNEUMATIC_ENG1_ANTI_ICE)"
+          }
+        },
+        {
+          "id": "pneu.ditching.upper",
+          "control": "DITCHING upper annunciator",
+          "pin": "D45",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_PNEUMATIC_DITCHING_U)"
+          }
+        },
+        {
+          "id": "pneu.ditching.lower",
+          "control": "DITCHING lower annunciator",
+          "pin": "D44",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_PNEUMATIC_DITCHING_L)"
+          }
+        },
+        {
+          "id": "pneu.ditching.switch",
+          "control": "DITCHING switch",
+          "pin": "D46",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_PNEUMATIC_DITCHING) ! (>L:S_OH_PNEUMATIC_DITCHING)"
+          }
+        },
+        {
+          "id": "signs.emergency.upper",
+          "control": "EMERGENCY LIGHT upper annunciator",
+          "pin": "D49",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_SIGNS_EMER_EXIT_U)"
+          }
+        },
+        {
+          "id": "signs.emergency.lower",
+          "control": "EMERGENCY LIGHT lower annunciator",
+          "pin": "D48",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_SIGNS_EMER_EXIT_L)"
+          }
+        },
+        {
+          "id": "signs.emergency.switch",
+          "control": "EMERGENCY LIGHT switch",
+          "pin": "D47",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_SIGNS_EMER_EXIT) ! (>L:S_OH_SIGNS_EMER_EXIT)"
+          }
+        },
+        {
+          "id": "signs.seatbelt.pos1",
+          "control": "SEATBELT position 1",
+          "pin": "D50",
+          "mode": "digital_input",
+          "role": "selector_position",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "0 (>L:S_OH_SIGNS_SEAT_BELTS)",
+            "onRelease": "1 (>L:S_OH_SIGNS_SEAT_BELTS)"
+          }
+        },
+        {
+          "id": "signs.seatbelt.pos2",
+          "control": "SEATBELT position 2",
+          "pin": "D51",
+          "mode": "digital_input",
+          "role": "selector_position",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "2 (>L:S_OH_SIGNS_SEAT_BELTS)",
+            "onRelease": "1 (>L:S_OH_SIGNS_SEAT_BELTS)"
+          }
+        },
+        {
+          "id": "signs.no_smoking.pos1",
+          "control": "NO SMOKING position 1",
+          "pin": "D52",
+          "mode": "digital_input",
+          "role": "selector_position",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "0 (>L:S_OH_SIGNS_NO_SMOKING)",
+            "onRelease": "1 (>L:S_OH_SIGNS_NO_SMOKING)"
+          }
+        },
+        {
+          "id": "signs.no_smoking.pos2",
+          "control": "NO SMOKING position 2",
+          "pin": "D53",
+          "mode": "digital_input",
+          "role": "selector_position",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "2 (>L:S_OH_SIGNS_NO_SMOKING)",
+            "onRelease": "1 (>L:S_OH_SIGNS_NO_SMOKING)"
+          }
+        },
+        {
+          "id": "lights.landing_left.pos1",
+          "control": "LEFT LANDING position 1",
+          "pin": "A1",
+          "mode": "digital_input",
+          "role": "selector_position",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "0 (>L:S_OH_EXT_LT_LANDING_L)",
+            "onRelease": "1 (>L:S_OH_EXT_LT_LANDING_L)"
+          }
+        },
+        {
+          "id": "lights.landing_left.pos2",
+          "control": "LEFT LANDING position 2",
+          "pin": "A2",
+          "mode": "digital_input",
+          "role": "selector_position",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "2 (>L:S_OH_EXT_LT_LANDING_L)",
+            "onRelease": "1 (>L:S_OH_EXT_LT_LANDING_L)"
+          }
+        },
+        {
+          "id": "lights.landing_right.pos1",
+          "control": "RIGHT LANDING position 1",
+          "pin": "A3",
+          "mode": "digital_input",
+          "role": "selector_position",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "0 (>L:S_OH_EXT_LT_LANDING_R)",
+            "onRelease": "1 (>L:S_OH_EXT_LT_LANDING_R)"
+          }
+        },
+        {
+          "id": "lights.landing_right.pos2",
+          "control": "RIGHT LANDING position 2",
+          "pin": "A4",
+          "mode": "digital_input",
+          "role": "selector_position",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "2 (>L:S_OH_EXT_LT_LANDING_R)",
+            "onRelease": "1 (>L:S_OH_EXT_LT_LANDING_R)"
+          }
+        },
+        {
+          "id": "lights.nose.pos1",
+          "control": "NOSE/TAXI position 1",
+          "pin": "A5",
+          "mode": "digital_input",
+          "role": "selector_position",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "2 (>L:S_OH_EXT_LT_NOSE)",
+            "onRelease": "1 (>L:S_OH_EXT_LT_NOSE)"
+          }
+        },
+        {
+          "id": "lights.nose.pos2",
+          "control": "NOSE/TAXI position 2",
+          "pin": "A6",
+          "mode": "digital_input",
+          "role": "selector_position",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "0 (>L:S_OH_EXT_LT_NOSE)",
+            "onRelease": "1 (>L:S_OH_EXT_LT_NOSE)"
+          }
+        },
+        {
+          "id": "lights.nav_logo.pos1",
+          "control": "NAV/LOGO position 1",
+          "pin": "A7",
+          "mode": "digital_input",
+          "role": "selector_position",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "0 (>L:S_OH_EXT_LT_NAV_LOGO)",
+            "onRelease": "1 (>L:S_OH_EXT_LT_NAV_LOGO)"
+          }
+        },
+        {
+          "id": "lights.nav_logo.pos2",
+          "control": "NAV/LOGO position 2",
+          "pin": "A8",
+          "mode": "digital_input",
+          "role": "selector_position",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "2 (>L:S_OH_EXT_LT_NAV_LOGO)",
+            "onRelease": "1 (>L:S_OH_EXT_LT_NAV_LOGO)"
+          }
+        },
+        {
+          "id": "lights.wing.pos1",
+          "control": "WING LIGHT position 1",
+          "pin": "A9",
+          "mode": "digital_input",
+          "role": "selector_position",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "1 (>L:S_OH_EXT_LT_WING)",
+            "onRelease": "0 (>L:S_OH_EXT_LT_WING)"
+          }
+        },
+        {
+          "id": "lights.wing.pos2",
+          "control": "WING LIGHT position 2",
+          "pin": "A10",
+          "mode": "digital_input",
+          "role": "selector_position",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "0 (>L:S_OH_EXT_LT_WING)",
+            "onRelease": "1 (>L:S_OH_EXT_LT_WING)"
+          }
+        },
+        {
+          "id": "lights.beacon.pos1",
+          "control": "BEACON position 1",
+          "pin": "A11",
+          "mode": "digital_input",
+          "role": "selector_position",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "1 (>L:S_OH_EXT_LT_BEACON)",
+            "onRelease": "0 (>L:S_OH_EXT_LT_BEACON)"
+          }
+        },
+        {
+          "id": "lights.beacon.pos2",
+          "control": "BEACON position 2",
+          "pin": "A12",
+          "mode": "digital_input",
+          "role": "selector_position",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "0 (>L:S_OH_EXT_LT_BEACON)",
+            "onRelease": "1 (>L:S_OH_EXT_LT_BEACON)"
+          }
+        },
+        {
+          "id": "lights.strobe.pos1",
+          "control": "STROBE position 1",
+          "pin": "A13",
+          "mode": "digital_input",
+          "role": "selector_position",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "0 (>L:S_OH_EXT_LT_STROBE)",
+            "onRelease": "1 (>L:S_OH_EXT_LT_STROBE)"
+          }
+        },
+        {
+          "id": "lights.strobe.pos2",
+          "control": "STROBE position 2",
+          "pin": "A14",
+          "mode": "digital_input",
+          "role": "selector_position",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "EXT LIGHT OVERHEAD conflict-resolved revision 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "2 (>L:S_OH_EXT_LT_STROBE)",
+            "onRelease": "1 (>L:S_OH_EXT_LT_STROBE)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "apu-panel",
+      "name": "APU-PANEL",
+      "kind": "mega2560",
+      "optional": true,
+      "expectedHardware": "Arduino Mega 2560",
+      "assignments": [
+        {
+          "id": "apu.master.upper",
+          "control": "APU MASTER upper annunciator",
+          "pin": "D7",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated APU panel update 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_ELEC_APU_MASTER_U)"
+          }
+        },
+        {
+          "id": "apu.master.lower",
+          "control": "APU MASTER lower annunciator",
+          "pin": "D6",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated APU panel update 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_ELEC_APU_MASTER_L)"
+          }
+        },
+        {
+          "id": "apu.master.switch",
+          "control": "APU MASTER switch",
+          "pin": "D5",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated APU panel update 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_ELEC_APU_MASTER) ! (>L:S_OH_ELEC_APU_MASTER)"
+          }
+        },
+        {
+          "id": "apu.start.upper",
+          "control": "APU START upper annunciator",
+          "pin": "D13",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated APU panel update 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_ELEC_APU_START_U)"
+          }
+        },
+        {
+          "id": "apu.start.lower",
+          "control": "APU START lower annunciator",
+          "pin": "D11",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated APU panel update 2026-08-21",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:I_OH_ELEC_APU_START_L)"
+          }
+        },
+        {
+          "id": "apu.start.switch",
+          "control": "APU START switch",
+          "pin": "D9",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Dedicated APU panel update 2026-08-21",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_ELEC_APU_START) 2 + (>L:S_OH_ELEC_APU_START)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "left-adirs-gpws-call-oxy",
+      "name": "LEFT-ADIRS-GPWS-CALL-OXY",
+      "kind": "mega2560",
+      "optional": true,
+      "expectedHardware": "Arduino Mega 2560",
+      "assignments": [
+        {
+          "id": "adirs.ir1.rot_a",
+          "control": "IR 1 rotary position A",
+          "pin": "D2",
+          "mode": "digital_input",
+          "role": "rotary_contact",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": true,
+            "onPress": "0 (>L:S_OH_NAV_IR1_MODE)",
+            "onRelease": "1 (>L:S_OH_NAV_IR1_MODE)"
+          }
+        },
+        {
+          "id": "adirs.ir1.rot_b",
+          "control": "IR 1 rotary position B",
+          "pin": "D3",
+          "mode": "digital_input",
+          "role": "rotary_contact",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": true,
+            "onPress": "3 (>L:S_OH_NAV_IR1_MODE)",
+            "onRelease": "1 (>L:S_OH_NAV_IR1_MODE)"
+          }
+        },
+        {
+          "id": "adirs.ir3.rot_a",
+          "control": "IR 3 rotary position A",
+          "pin": "D4",
+          "mode": "digital_input",
+          "role": "rotary_contact",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": true,
+            "onPress": "0 (>L:S_OH_NAV_IR3_MODE)",
+            "onRelease": "1 (>L:S_OH_NAV_IR3_MODE)"
+          }
+        },
+        {
+          "id": "adirs.ir3.rot_b",
+          "control": "IR 3 rotary position B",
+          "pin": "D5",
+          "mode": "digital_input",
+          "role": "rotary_contact",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": true,
+            "onPress": "3 (>L:S_OH_NAV_IR3_MODE)",
+            "onRelease": "1 (>L:S_OH_NAV_IR3_MODE)"
+          }
+        },
+        {
+          "id": "adirs.ir2.rot_a",
+          "control": "IR 2 rotary position A",
+          "pin": "D6",
+          "mode": "digital_input",
+          "role": "rotary_contact",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": true,
+            "onPress": "0 (>L:S_OH_NAV_IR2_MODE)",
+            "onRelease": "1 (>L:S_OH_NAV_IR2_MODE)"
+          }
+        },
+        {
+          "id": "adirs.ir2.rot_b",
+          "control": "IR 2 rotary position B",
+          "pin": "D7",
+          "mode": "digital_input",
+          "role": "rotary_contact",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": true,
+            "onPress": "3 (>L:S_OH_NAV_IR2_MODE)",
+            "onRelease": "1 (>L:S_OH_NAV_IR2_MODE)"
+          }
+        },
+        {
+          "id": "call.mech",
+          "control": "CALL MECH",
+          "pin": "D8",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": false,
+            "onPress": "(L:S_OH_CALLS_MECH, number) 1 + (>L:S_OH_CALLS_MECH, number)",
+            "onRelease": "(L:S_OH_CALLS_MECH, number) 1 + (>L:S_OH_CALLS_MECH, number)"
+          }
+        },
+        {
+          "id": "call.fwd",
+          "control": "CALL FWD",
+          "pin": "D9",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": false,
+            "onPress": "(L:S_OH_CALLS_FWD, number) 1 + (>L:S_OH_CALLS_FWD, number)",
+            "onRelease": "(L:S_OH_CALLS_FWD, number) 1 + (>L:S_OH_CALLS_FWD, number)"
+          }
+        },
+        {
+          "id": "call.aft",
+          "control": "CALL AFT",
+          "pin": "D10",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": false,
+            "onPress": "(L:S_OH_CALLS_AFT, number) 1 + (>L:S_OH_CALLS_AFT, number)",
+            "onRelease": "(L:S_OH_CALLS_AFT, number) 1 + (>L:S_OH_CALLS_AFT, number)"
+          }
+        },
+        {
+          "id": "call.all",
+          "control": "CALL ALL",
+          "pin": "D21",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_CALLS_ALL, number) 1 + (>L:S_OH_CALLS_ALL, number)",
+            "onRelease": "(L:S_OH_CALLS_ALL, number) 1 + (>L:S_OH_CALLS_ALL, number)"
+          }
+        },
+        {
+          "id": "gpws.sys.upper",
+          "control": "GPWS SYSTEMS upper annunciator",
+          "pin": "D12",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:S_OH_GPWS_SYS) 0 =="
+          },
+          "notes": "OFF/FAULT outputs incorporate requested reversal"
+        },
+        {
+          "id": "gpws.sys.lower",
+          "control": "GPWS SYSTEMS lower annunciator",
+          "pin": "D13",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:S_OH_GPWS_SYS) 1 =="
+          },
+          "notes": "OFF/FAULT outputs incorporate requested reversal"
+        },
+        {
+          "id": "gpws.sys.switch",
+          "control": "GPWS SYSTEMS switch",
+          "pin": "D14",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_GPWS_SYS) ! (>L:S_OH_GPWS_SYS) 1 (>L:S_OH_GPWS_SYS_Anim)",
+            "onRelease": "(L:S_OH_GPWS_SYS) 0 == if{ 0 (>L:S_OH_GPWS_SYS_Anim) } (L:S_OH_GPWS_SYS) 1 == if{ 2 (>L:S_OH_GPWS_SYS_Anim) }"
+          },
+          "notes": "OFF/FAULT outputs incorporate requested reversal"
+        },
+        {
+          "id": "gpws.gs.upper",
+          "control": "GPWS GS MODE upper annunciator",
+          "pin": "D15",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:S_OH_GPWS_GS_MODE) 0 =="
+          },
+          "notes": "OFF/FAULT outputs incorporate requested reversal"
+        },
+        {
+          "id": "gpws.gs.lower",
+          "control": "GPWS GS MODE lower annunciator",
+          "pin": "D16",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:S_OH_GPWS_GS_MODE) 1 =="
+          },
+          "notes": "OFF/FAULT outputs incorporate requested reversal"
+        },
+        {
+          "id": "gpws.gs.switch",
+          "control": "GPWS GS MODE switch",
+          "pin": "D17",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_GPWS_GS_MODE) ! (>L:S_OH_GPWS_GS_MODE) 1 (>L:S_OH_GPWS_GS_MODE_Anim)",
+            "onRelease": "(L:S_OH_GPWS_GS_MODE) 0 == if{ 0 (>L:S_OH_GPWS_GS_MODE_Anim) } (L:S_OH_GPWS_GS_MODE) 1 == if{ 2 (>L:S_OH_GPWS_GS_MODE_Anim) }"
+          },
+          "notes": "OFF/FAULT outputs incorporate requested reversal"
+        },
+        {
+          "id": "gpws.flap.upper",
+          "control": "GPWS FLAP MODE upper annunciator",
+          "pin": "D18",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:S_OH_GPWS_FLAP_MODE) 0 =="
+          },
+          "notes": "OFF/FAULT outputs incorporate requested reversal"
+        },
+        {
+          "id": "gpws.flap.lower",
+          "control": "GPWS FLAP MODE lower annunciator",
+          "pin": "D19",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": true,
+            "feedback": "(L:S_OH_GPWS_FLAP_MODE) 1 =="
+          },
+          "notes": "OFF/FAULT outputs incorporate requested reversal"
+        },
+        {
+          "id": "gpws.flap.switch",
+          "control": "GPWS FLAP MODE switch",
+          "pin": "D20",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "revised",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": true,
+            "onPress": "(L:S_OH_GPWS_FLAP_MODE) ! (>L:S_OH_GPWS_FLAP_MODE) 1 (>L:S_OH_GPWS_FLAP_MODE_Anim)",
+            "onRelease": "(L:S_OH_GPWS_FLAP_MODE) 0 == if{ 0 (>L:S_OH_GPWS_FLAP_MODE_Anim) } (L:S_OH_GPWS_FLAP_MODE) 1 == if{ 2 (>L:S_OH_GPWS_FLAP_MODE_Anim) }"
+          },
+          "notes": "OFF/FAULT outputs incorporate requested reversal"
+        },
+        {
+          "id": "adirs.ir1.upper",
+          "control": "IR 1 upper annunciator",
+          "pin": "D22",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": false,
+            "feedback": "(L:I_OH_NAV_IR1_U)"
+          }
+        },
+        {
+          "id": "adirs.ir1.lower",
+          "control": "IR 1 lower annunciator",
+          "pin": "D23",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": false,
+            "feedback": "(L:I_OH_NAV_IR1_L)"
+          }
+        },
+        {
+          "id": "adirs.ir1.switch",
+          "control": "IR 1 switch",
+          "pin": "D25",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": false,
+            "onPress": "(L:S_OH_NAV_IR1_Anim) 2 == if{ 0 } els{ 2 } (>L:S_OH_NAV_IR1_Anim) (L:S_OH_NAV_IR1, Bool) ! (>L:S_OH_NAV_IR1)"
+          }
+        },
+        {
+          "id": "adirs.ir2.upper",
+          "control": "IR 2 upper annunciator",
+          "pin": "D24",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": false,
+            "feedback": "(L:I_OH_NAV_IR2_U)"
+          }
+        },
+        {
+          "id": "adirs.ir2.lower",
+          "control": "IR 2 lower annunciator",
+          "pin": "D26",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": false,
+            "feedback": "(L:I_OH_NAV_IR2_L)"
+          }
+        },
+        {
+          "id": "adirs.ir2.switch",
+          "control": "IR 2 switch",
+          "pin": "D27",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": false,
+            "onPress": "(L:S_OH_NAV_IR2_Anim) 2 == if{ 0 } els{ 2 } (>L:S_OH_NAV_IR2_Anim) (L:S_OH_NAV_IR2, Bool) ! (>L:S_OH_NAV_IR2)"
+          }
+        },
+        {
+          "id": "adirs.ir3.upper",
+          "control": "IR 3 upper annunciator",
+          "pin": "D28",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": false,
+            "feedback": "(L:I_OH_NAV_IR3_U)"
+          }
+        },
+        {
+          "id": "adirs.ir3.lower",
+          "control": "IR 3 lower annunciator",
+          "pin": "D29",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": false,
+            "feedback": "(L:I_OH_NAV_IR3_L)"
+          }
+        },
+        {
+          "id": "adirs.ir3.switch",
+          "control": "IR 3 switch",
+          "pin": "D30",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": false,
+            "onPress": "(L:S_OH_NAV_IR3_Anim) 2 == if{ 0 } els{ 2 } (>L:S_OH_NAV_IR3_Anim) (L:S_OH_NAV_IR3, Bool) ! (>L:S_OH_NAV_IR3)"
+          }
+        },
+        {
+          "id": "adirs.adr1.upper",
+          "control": "ADR 1 upper annunciator",
+          "pin": "D31",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": false,
+            "feedback": "(L:I_OH_NAV_ADR1_U)"
+          }
+        },
+        {
+          "id": "adirs.adr1.lower",
+          "control": "ADR 1 lower annunciator",
+          "pin": "D32",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": false,
+            "feedback": "(L:I_OH_NAV_ADR1_L)"
+          }
+        },
+        {
+          "id": "adirs.adr1.switch",
+          "control": "ADR 1 switch",
+          "pin": "D33",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": false,
+            "onPress": "(L:S_OH_NAV_ADR1_Anim) 2 == if{ 0 } els{ 2 } (>L:S_OH_NAV_ADR1_Anim) (L:S_OH_NAV_ADR1, Bool) ! (>L:S_OH_NAV_ADR1)"
+          }
+        },
+        {
+          "id": "adirs.adr2.upper",
+          "control": "ADR 2 upper annunciator",
+          "pin": "D34",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": false,
+            "feedback": "(L:I_OH_NAV_ADR2_U)"
+          }
+        },
+        {
+          "id": "adirs.adr2.lower",
+          "control": "ADR 2 lower annunciator",
+          "pin": "D35",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": false,
+            "feedback": "(L:I_OH_NAV_ADR2_L)"
+          }
+        },
+        {
+          "id": "adirs.adr2.switch",
+          "control": "ADR 2 switch",
+          "pin": "D37",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": false,
+            "onPress": "(L:S_OH_NAV_ADR2_Anim) 2 == if{ 0 } els{ 2 } (>L:S_OH_NAV_ADR2_Anim) (L:S_OH_NAV_ADR2, Bool) ! (>L:S_OH_NAV_ADR2)"
+          }
+        },
+        {
+          "id": "adirs.adr3.upper",
+          "control": "ADR 3 upper annunciator",
+          "pin": "D36",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": false,
+            "feedback": "(L:I_OH_NAV_ADR3_U)"
+          }
+        },
+        {
+          "id": "adirs.adr3.lower",
+          "control": "ADR 3 lower annunciator",
+          "pin": "D39",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": false,
+            "feedback": "(L:I_OH_NAV_ADR3_L)"
+          }
+        },
+        {
+          "id": "adirs.adr3.switch",
+          "control": "ADR 3 switch",
+          "pin": "D38",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": false,
+            "onPress": "(L:S_OH_NAV_ADR3_Anim) 2 == if{ 0 } els{ 2 } (>L:S_OH_NAV_ADR3_Anim) (L:S_OH_NAV_ADR3, Bool) ! (>L:S_OH_NAV_ADR3)"
+          }
+        },
+        {
+          "id": "wiper.slow",
+          "control": "WIPER SLOW",
+          "pin": "D40",
+          "mode": "digital_input",
+          "role": "selector_position",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": false
+          }
+        },
+        {
+          "id": "wiper.fast",
+          "control": "WIPER FAST",
+          "pin": "D41",
+          "mode": "digital_input",
+          "role": "selector_position",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": false
+          }
+        },
+        {
+          "id": "oxy.crew.upper",
+          "control": "OXY CREW SUPPLY upper annunciator",
+          "pin": "D42",
+          "mode": "digital_output",
+          "role": "led_upper",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": false,
+            "feedback": "(L:I_OH_OXY_CREW_SUPPLY_U)"
+          }
+        },
+        {
+          "id": "oxy.crew.lower",
+          "control": "OXY CREW SUPPLY lower annunciator",
+          "pin": "D43",
+          "mode": "digital_output",
+          "role": "led_lower",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": false,
+            "feedback": "(L:I_OH_OXY_CREW_SUPPLY_L)"
+          }
+        },
+        {
+          "id": "oxy.crew.switch",
+          "control": "OXY CREW SUPPLY switch",
+          "pin": "D45",
+          "mode": "digital_input",
+          "role": "switch",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": true,
+          "debounceMs": 35,
+          "sourceRevision": "Board3 LEFT ADIRS/GPWS/CALL/OXY audited 2026-08-20",
+          "sim": {
+            "verified": false,
+            "onPress": "(L:S_OH_OXY_CREW_SUPPLY_Anim) 2 == if{ 0 } els{ 2 } (>L:S_OH_OXY_CREW_SUPPLY_Anim) (L:S_OH_OXY_CREW_SUPPLY, Bool) ! (>L:S_OH_OXY_CREW_SUPPLY)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "backlight-nano",
+      "name": "BACKLIGHT-NANO",
+      "kind": "backlight_nano",
+      "optional": false,
+      "expectedHardware": "Arduino Nano currently COM21",
+      "assignments": [
+        {
+          "id": "backlight.data",
+          "control": "Overhead WS2812B data",
+          "pin": "D6",
+          "mode": "ws2812_data",
+          "role": "backlight_data",
+          "status": "confirmed",
+          "enabled": true,
+          "activeLow": false,
+          "debounceMs": 35,
+          "sourceRevision": "Backlighting architecture confirmed 2026-08-22",
+          "sim": {
+            "verified": true
+          },
+          "notes": "330-ohm series resistor; common ground; separate fused 5V supply"
+        }
+      ]
+    }
+  ],
+  "backlighting": {
+    "controller": "BACKLIGHT-NANO",
+    "dataPin": "D6",
+    "ledCount": 300,
+    "colour": {
+      "red": 255,
+      "green": 128,
+      "blue": 0
+    },
+    "presets": {
+      "FULL LIGHT": 255,
+      "HALF DIM": 128,
+      "DAY TIME DIM": 180
+    },
+    "startupPreset": "DAY TIME DIM",
+    "persistLastPreset": true
+  },
+  "changeLog": [
+    {
+      "timestampUtc": "2026-08-22T00:00:00+00:00",
+      "reason": "Standalone seed profile generated from supplied assignments, corrected Fenix project, and latest revisions"
+    }
+  ]
+}
