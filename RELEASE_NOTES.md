@@ -1,4 +1,17 @@
-# OverheadLink v0.3.6 one-file Windows build
+# OverheadLink v0.3.7 HYD/FUEL split + device remote
+
+## New in v0.3.7
+
+- Split the previous combined **ELEC-HYD-FUEL** identity into separately assignable **ELEC** and **HYD-FUEL** Mega 2560 panels.
+- Added a one-time safe profile migration with a pre-v0.3.7 backup, so existing learned corrections on unrelated panels are preserved.
+- Applied the confirmed dedicated HYD/FUEL Mega map: Left tank pumps 1/2, centre tank pumps 1/2, right tank pumps 1/2, ENG 2 HYD pump, X FEED, and ENG 1 HYD pump.
+- The HYD BLUE electric pump remains on the ELEC board until its new dedicated HYD/FUEL pins are confirmed; no pins are guessed.
+- Added **IDG 1 switch = D6** on the ELEC Mega using the Fenix IDG 1 press/release actions from the bundled HubHop catalogue.
+- Recorded the **BATTERY 2 voltage display** hardware allocation on the ELEC Mega as **CLK=A2 / DIO=A3**.
+- Added a built-in **Remote** tab and LAN-only web overhead remote for iPhone, iPad, Android, or another computer.
+- The remote uses a fresh six-digit pairing code each OverheadLink launch and rejects non-local-network clients.
+- The phone remote displays live Fenix connection state and Korry upper/lower feedback where available, and operates the same mapped Fenix overhead commands as the physical controls.
+- On iPhone, the remote can be installed as an app-like launcher using Safari **Share → Add to Home Screen**; no App Store package or cloud account is required.
 
 ## New in v0.3.6
 
