@@ -16,8 +16,9 @@ PROJECT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT / "src"))
 
 from overheadlink.backlight import COLOUR_PRESETS, BacklightController, BacklightSettings, BrightnessPreset, ColourPreset
+from overheadlink.fenix_catalog import FenixActionCatalog
 from overheadlink.learning import AnalogLearningSession, DigitalLearningSession
-from overheadlink.models import canonical_pin, pin_number
+from overheadlink.models import PinMode, VerificationStatus, canonical_pin, pin_number
 from overheadlink.preferences import AppPreferences, canonical_port
 from overheadlink.profile import ProfileStore, ProfileValidator
 from overheadlink.protocol import encode_message, parse_message
@@ -73,6 +74,20 @@ class PinTests(unittest.TestCase):
     def test_bad_pin_rejected(self) -> None:
         with self.assertRaises(ValueError):
             pin_number("D54")
+
+
+class FenixCatalogTests(unittest.TestCase):
+    def test_complete_hubhop_overhead_snapshot(self) -> None:
+        catalog = FenixActionCatalog.load(PROJECT / "profiles" / "fenix_a320_overhead_hubhop.json")
+        self.assertEqual(len(catalog.actions), 488)
+        self.assertEqual(catalog.input_count, 308)
+        self.assertEqual(catalog.output_count, 180)
+        self.assertEqual(len({action.id for action in catalog.actions}), 488)
+        self.assertIn("ADIRS", catalog.systems)
+        self.assertIn("Electrical", catalog.systems)
+        self.assertIn("Pneumatic", catalog.systems)
+        self.assertTrue(any(action.compatible_with(PinMode.ANALOG_INPUT) for action in catalog.actions))
+        self.assertTrue(any(action.compatible_with(PinMode.DIGITAL_OUTPUT) for action in catalog.actions))
 
 
 class ProtocolTests(unittest.TestCase):
@@ -317,6 +332,76 @@ class ProfileTests(unittest.TestCase):
             assert reloaded is not None
             self.assertEqual(reloaded.pin, "D43")
             self.assertFalse(reloaded.active_low)
+
+    def test_manual_pin_edit_persists_board_pin_polarity_debounce_and_status(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            profile = copy.deepcopy(self.profile)
+            path = Path(directory) / "profile.json"
+            store = ProfileStore(path)
+            store.save(profile, "test seed")
+            board = profile.board("air-cond")
+            assert board is not None
+            assignment = board.assignment("pneu.pack1.switch")
+            assert assignment is not None
+            store.repair_assignment(
+                profile,
+                board.id,
+                assignment.id,
+                board.id,
+                "D23",
+                "manual test",
+                active_low=False,
+                debounce_ms=75,
+                verification_status=VerificationStatus.REVISED,
+            )
+            reloaded = store.load().board("air-cond")
+            assert reloaded is not None
+            changed = reloaded.assignment("pneu.pack1.switch")
+            assert changed is not None
+            self.assertEqual(changed.pin, "D23")
+            self.assertFalse(changed.active_low)
+            self.assertEqual(changed.debounce_ms, 75)
+            self.assertEqual(changed.status, VerificationStatus.REVISED)
+
+    def test_fenix_catalog_action_can_replace_press_and_feedback_bindings(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            profile = copy.deepcopy(self.profile)
+            path = Path(directory) / "profile.json"
+            store = ProfileStore(path)
+            store.save(profile, "test seed")
+            board = profile.board("air-cond")
+            assert board is not None
+            switch = board.assignment("pneu.pack1.switch")
+            lamp = board.assignment("pneu.pack1.upper")
+            assert switch is not None and lamp is not None
+            store.assign_fenix_action(
+                profile,
+                board.id,
+                switch.id,
+                "press",
+                "(L:S_OH_PNEUMATIC_PACK_1) ! (>L:S_OH_PNEUMATIC_PACK_1)",
+                "HubHop test input",
+                "catalog test",
+            )
+            store.assign_fenix_action(
+                profile,
+                board.id,
+                lamp.id,
+                "feedback",
+                "(L:I_OH_PNEUMATIC_PACK_1_U)",
+                "HubHop test output",
+                "catalog test",
+            )
+            reloaded = store.load().board(board.id)
+            assert reloaded is not None
+            changed_switch = reloaded.assignment(switch.id)
+            changed_lamp = reloaded.assignment(lamp.id)
+            assert changed_switch is not None and changed_lamp is not None
+            self.assertIn("S_OH_PNEUMATIC_PACK_1", changed_switch.sim.on_press)
+            self.assertEqual(changed_lamp.sim.feedback, "(L:I_OH_PNEUMATIC_PACK_1_U)")
+            self.assertTrue(changed_switch.sim.verified)
+            self.assertTrue(changed_lamp.sim.verified)
+            self.assertEqual(changed_switch.status, VerificationStatus.REVISED)
 
 
 class SimulatorCommandTests(unittest.TestCase):

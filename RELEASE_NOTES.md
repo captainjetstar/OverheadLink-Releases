@@ -1,4 +1,16 @@
-# OverheadLink v0.3.5 one-file Windows build
+# OverheadLink v0.3.6 one-file Windows build
+
+## New in v0.3.6
+
+- Right-click any assignment to **Map/Reassign by Operating Control** or **Edit Pin Manually**.
+- Manual editing supports selecting the Mega panel, changing the pin, changing active-low polarity, and editing digital-input debounce.
+- Duplicate pins, D0/D1, invalid pin names, and non-analogue potentiometer pins are rejected before saving.
+- LED-output edits require an explicit safety confirmation, and changed boards are marked for map reload instead of being driven immediately.
+- Every saved change creates a timestamped profile backup and a change-log entry.
+- Added a searchable **Fenix Actions** catalogue containing all 488 Fenix A320 overhead presets found in the MobiFlight HubHop snapshot: 301 digital inputs, 7 potentiometer inputs, and 180 outputs.
+- A selected catalogue action can be assigned to an existing physical pin, including separate press/release bindings and annunciator feedback.
+- The new **Find Pin by Operating Korry** workflow starts with the Fenix action: select it, operate the matching Korry twice, and OverheadLink detects the Mega, pin, and polarity before saving.
+- HubHop potentiometer actions now dispatch live calibrated analogue values through MobiFlight's `@` placeholder.
 
 ## New in v0.3.5
 

@@ -3,8 +3,8 @@
 101 ICON "overheadlink.ico"
 
 1 VERSIONINFO
- FILEVERSION 0,3,5,0
- PRODUCTVERSION 0,3,5,0
+ FILEVERSION 0,3,6,0
+ PRODUCTVERSION 0,3,6,0
  FILEFLAGSMASK 0x3fL
  FILEFLAGS 0x0L
  FILEOS 0x40004L
@@ -17,11 +17,11 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "OverheadLink\0"
             VALUE "FileDescription", "MSFS 2024 / Fenix A320 overhead controller\0"
-            VALUE "FileVersion", "0.3.5\0"
+            VALUE "FileVersion", "0.3.6\0"
             VALUE "InternalName", "OverheadLink\0"
-            VALUE "OriginalFilename", "OverheadLink_v0.3.5_Windows_x64.exe\0"
+            VALUE "OriginalFilename", "OverheadLink_v0.3.6_Windows_x64.exe\0"
             VALUE "ProductName", "OverheadLink\0"
-            VALUE "ProductVersion", "0.3.5\0"
+            VALUE "ProductVersion", "0.3.6\0"
         END
     END
     BLOCK "VarFileInfo"

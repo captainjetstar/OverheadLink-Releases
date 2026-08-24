@@ -17,7 +17,7 @@ After the application has run once, the **Firmware Files** button opens both emb
 
 ## Start the desktop app
 
-1. Double-click `OverheadLink_v0.3.5_Windows_x64.exe`. Its first run installs the embedded private runtime, USB serial support, and SimConnect client automatically, then creates an **OverheadLink** desktop shortcut.
+1. Double-click `OverheadLink_v0.3.6_Windows_x64.exe`. Its first run installs the embedded private runtime, USB serial support, and SimConnect client automatically, then creates an **OverheadLink** desktop shortcut.
 2. On **Connections**, right-click each OverheadLink Mega, choose **Assign to…**, and select its panel identity. Right-click unrelated SL3, Rowsfire, or MobiFlight ports and choose **Ignore this COM port**. Both choices persist after restart.
 3. The validated map loads automatically whenever an identified Mega comes online. Check that the profile indicator shows zero errors; the manual **Load All Online Maps** button remains available for troubleshooting.
 4. On **Backlighting**, test **FULL LIGHT**, **HALF DIM**, and **DAY TIME DIM**. Edit and save the 0–255 values if required.
@@ -34,5 +34,14 @@ After the application has run once, the **Firmware Files** button opens both emb
 - Switch/selector: select it, click **Find Correct Pin**, and operate it twice.
 - Potentiometer: select it, click **Find Correct Pin**, move it through full travel twice, then click **Finish Analogue Scan**.
 - Korry legend: select that upper/lower output and click **Find Correct Output Pin**. Confirm the lamp visually as the app pulses only validated output pins.
+
+## Map a Fenix action
+
+1. Open **Fenix Actions** and search for the MobiFlight/HubHop Fenix overhead action.
+2. Select the input action and click **Find Pin by Operating Korry**.
+3. Operate the matching Korry twice. Confirm whether the command should run when pressed/operated or when released.
+4. For a known physical pin instead, select it on **Assign Pins**, click **Choose Fenix Action…**, then assign the catalogue action directly.
+
+The catalogue includes 488 Fenix A320 overhead presets: 301 digital inputs, 7 potentiometer inputs, and 180 output expressions. It does not occupy or invent physical pins; your supplied Mega map remains separate.
 
 Accepted corrections are saved to the active profile with a timestamped backup and change-log entry. Use **Export Log** if a simulator command, LVar, board identity, or physical pin still disagrees.

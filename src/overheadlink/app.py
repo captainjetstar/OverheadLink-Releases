@@ -13,6 +13,7 @@ import uuid
 
 from . import __version__
 from .backlight import COLOUR_PRESETS, BacklightController, BacklightSettings, BrightnessPreset, ColourPreset
+from .fenix_catalog import CATALOG_FILENAME, FenixAction, FenixActionCatalog
 from .learning import AnalogLearningResult, AnalogLearningSession, DigitalLearningResult, DigitalLearningSession
 from .models import BoardKind, PinAssignment, PinMode, VerificationStatus, canonical_pin
 from .preferences import AppPreferences, canonical_port
@@ -50,6 +51,18 @@ def writable_profile_path() -> Path:
     return target
 
 
+def calibrated_analog_value(raw_value: int, calibration: dict[str, float | int | bool]) -> int:
+    minimum = int(calibration.get("minimum", 0))
+    maximum = int(calibration.get("maximum", 1023))
+    if maximum <= minimum:
+        minimum, maximum = 0, 1023
+    clamped = max(minimum, min(maximum, int(raw_value)))
+    scaled = round((clamped - minimum) * 1023 / (maximum - minimum))
+    if bool(calibration.get("inverted", False)):
+        scaled = 1023 - scaled
+    return max(0, min(1023, scaled))
+
+
 class OverheadLinkApp(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
@@ -60,6 +73,12 @@ class OverheadLinkApp(tk.Tk):
 
         self.profile_store = ProfileStore(writable_profile_path())
         self.profile = self.profile_store.load()
+        self.catalog_error = ""
+        try:
+            self.fenix_catalog = FenixActionCatalog.load(bundled_root() / "profiles" / CATALOG_FILENAME)
+        except Exception as error:
+            self.fenix_catalog = None
+            self.catalog_error = str(error)
         self.validator = ProfileValidator()
         self.issues = self.validator.validate(self.profile)
         self.event_queue: Queue[tuple[ConnectedBoard, ProtocolMessage]] = Queue()
@@ -72,11 +91,13 @@ class OverheadLinkApp(tk.Tk):
         self.learning: DigitalLearningSession | None = None
         self.analog_learning: AnalogLearningSession | None = None
         self.repair_target: tuple[str, str] | None = None
+        self.catalog_learning_action_id: str | None = None
         self.selected_assignment: tuple[str, str] | None = None
         self.offline_fenix = tk.BooleanVar(value=False)
         self.configured_boards: set[str] = set()
         self.feedback_values: dict[str, float] = {}
         self.last_output_states: dict[tuple[str, str], bool] = {}
+        self.last_analog_values: dict[tuple[str, str], int] = {}
         self.fenix_subscribed = False
         self.fenix_connecting = False
         self.available_update: UpdateInfo | None = None
@@ -132,16 +153,19 @@ class OverheadLinkApp(tk.Tk):
         self.tabs.pack(fill="both", expand=True, padx=20, pady=(0, 20))
         self.connections_tab = ttk.Frame(self.tabs, padding=14)
         self.assign_tab = ttk.Frame(self.tabs, padding=14)
+        self.fenix_actions_tab = ttk.Frame(self.tabs, padding=14)
         self.backlight_tab = ttk.Frame(self.tabs, padding=14)
         self.debug_tab = ttk.Frame(self.tabs, padding=14)
         self.updates_tab = ttk.Frame(self.tabs, padding=14)
         self.tabs.add(self.connections_tab, text="Connections")
         self.tabs.add(self.assign_tab, text="Assign Pins")
+        self.tabs.add(self.fenix_actions_tab, text="Fenix Actions")
         self.tabs.add(self.backlight_tab, text="Backlighting")
         self.tabs.add(self.debug_tab, text="Live Debug")
         self.tabs.add(self.updates_tab, text="Updates")
         self._build_connections_tab()
         self._build_assign_tab()
+        self._build_fenix_actions_tab()
         self._build_backlight_tab()
         self._build_debug_tab()
         self._build_updates_tab()
@@ -331,10 +355,13 @@ class OverheadLinkApp(tk.Tk):
             self.assignment_tree.column(column, width=width, anchor="w")
         self.assignment_tree.pack(fill="both", expand=True)
         self.assignment_tree.bind("<<TreeviewSelect>>", self._assignment_selected)
+        self.assignment_tree.bind("<Button-3>", self._show_assignment_menu)
 
         ttk.Label(right, text="Selected assignment", style="Status.TLabel").pack(fill="x")
         self.assignment_detail = tk.Text(right, height=14, wrap="word", bg="#14202a", fg="#d9e3ec", insertbackground="white", relief="flat", padx=10, pady=10)
         self.assignment_detail.pack(fill="both", expand=True, pady=10)
+        ttk.Button(right, text="Choose Fenix Action…", command=self._choose_fenix_action).pack(fill="x", pady=4)
+        ttk.Button(right, text="Edit Pin Manually", command=self._edit_selected_assignment).pack(fill="x", pady=4)
         ttk.Button(right, text="Find Correct Pin", command=self._start_pin_repair).pack(fill="x", pady=4)
         ttk.Button(right, text="Finish Analogue Scan", command=self._finish_analog_repair).pack(fill="x", pady=4)
         ttk.Button(right, text="Pulse/Test Output Safely", command=self._test_selected_output).pack(fill="x", pady=4)
@@ -342,6 +369,106 @@ class OverheadLinkApp(tk.Tk):
         ttk.Button(right, text="Load Validated Map to Board", command=self._configure_selected_board).pack(fill="x", pady=4)
         self.learning_status = ttk.Label(right, text="No learning session running", style="Status.TLabel", wraplength=330)
         self.learning_status.pack(fill="x", pady=(12, 0))
+
+        ttk.Label(
+            left,
+            text="Right-click an action to map it by operating the physical control or edit its Mega and pin manually.",
+            style="Status.TLabel",
+        ).pack(fill="x", pady=(8, 0))
+
+    def _build_fenix_actions_tab(self) -> None:
+        filters = ttk.Frame(self.fenix_actions_tab, style="Card.TFrame", padding=10)
+        filters.pack(fill="x", pady=(0, 10))
+        ttk.Label(filters, text="Search", style="Status.TLabel").pack(side="left")
+        self.catalog_search_var = tk.StringVar()
+        search = ttk.Entry(filters, textvariable=self.catalog_search_var, width=34)
+        search.pack(side="left", padx=(4, 12), fill="x", expand=True)
+        ttk.Label(filters, text="System", style="Status.TLabel").pack(side="left")
+        systems = ["All systems"]
+        if self.fenix_catalog is not None:
+            systems.extend(self.fenix_catalog.systems)
+        self.catalog_system_var = tk.StringVar(value="All systems")
+        system = ttk.Combobox(filters, textvariable=self.catalog_system_var, values=systems, state="readonly", width=29)
+        system.pack(side="left", padx=(4, 12))
+        ttk.Label(filters, text="Type", style="Status.TLabel").pack(side="left")
+        self.catalog_type_var = tk.StringVar(value="All types")
+        preset_type = ttk.Combobox(
+            filters,
+            textvariable=self.catalog_type_var,
+            values=("All types", "Input", "Input (Potentiometer)", "Output"),
+            state="readonly",
+            width=22,
+        )
+        preset_type.pack(side="left", padx=(4, 10))
+        self.catalog_compatible_var = tk.BooleanVar(value=True)
+        ttk.Checkbutton(
+            filters,
+            text="Compatible with selected pin",
+            variable=self.catalog_compatible_var,
+            command=self._refresh_catalog_actions,
+        ).pack(side="left")
+
+        split = ttk.Panedwindow(self.fenix_actions_tab, orient="horizontal")
+        split.pack(fill="both", expand=True)
+        left = ttk.Frame(split)
+        right = ttk.Frame(split, style="Card.TFrame", padding=14)
+        split.add(left, weight=4)
+        split.add(right, weight=2)
+
+        columns = ("system", "action", "type", "status")
+        self.catalog_tree = ttk.Treeview(left, columns=columns, show="headings", selectmode="browse")
+        for column, heading, width in (
+            ("system", "System", 190),
+            ("action", "MobiFlight / HubHop action", 480),
+            ("type", "Type", 155),
+            ("status", "HubHop revision", 120),
+        ):
+            self.catalog_tree.heading(column, text=heading)
+            self.catalog_tree.column(column, width=width, anchor="w")
+        self.catalog_tree.pack(fill="both", expand=True)
+        self.catalog_tree.bind("<<TreeviewSelect>>", self._catalog_action_selected)
+        self.catalog_tree.bind("<Double-1>", lambda _event: self._assign_catalog_action())
+
+        self.catalog_target_var = tk.StringVar(value="Target pin: select one on the Assign Pins tab")
+        ttk.Label(right, textvariable=self.catalog_target_var, style="Status.TLabel", wraplength=340).pack(fill="x")
+        self.catalog_detail = tk.Text(
+            right,
+            height=18,
+            wrap="word",
+            bg="#14202a",
+            fg="#d9e3ec",
+            insertbackground="white",
+            relief="flat",
+            padx=10,
+            pady=10,
+        )
+        self.catalog_detail.pack(fill="both", expand=True, pady=10)
+        ttk.Button(right, text="Assign Action to Selected Pin", command=self._assign_catalog_action).pack(fill="x", pady=4)
+        ttk.Button(right, text="Find Pin by Operating Korry", command=self._start_catalog_action_learning).pack(fill="x", pady=4)
+        ttk.Button(right, text="Cancel Korry Learning", command=self._cancel_catalog_action_learning).pack(fill="x", pady=4)
+        ttk.Button(right, text="Go to Assign Pins", command=lambda: self.tabs.select(self.assign_tab)).pack(fill="x", pady=4)
+        self.catalog_learning_status = ttk.Label(
+            right,
+            text="Select an input action, then operate its Korry twice to identify the real Mega and pin.",
+            style="Status.TLabel",
+            wraplength=340,
+        )
+        self.catalog_learning_status.pack(fill="x", pady=(10, 0))
+        if self.fenix_catalog is None:
+            summary = f"Fenix catalogue could not be loaded: {self.catalog_error}"
+        else:
+            summary = (
+                f"{len(self.fenix_catalog.actions)} Fenix A320 overhead actions from MobiFlight HubHop · "
+                f"{self.fenix_catalog.input_count} inputs / {self.fenix_catalog.output_count} outputs · "
+                f"snapshot {self.fenix_catalog.snapshot_utc[:10]}"
+            )
+        self.catalog_summary = ttk.Label(left, text=summary, style="Status.TLabel", wraplength=850)
+        self.catalog_summary.pack(fill="x", pady=(8, 0))
+
+        self.catalog_search_var.trace_add("write", lambda *_args: self._refresh_catalog_actions())
+        self.catalog_system_var.trace_add("write", lambda *_args: self._refresh_catalog_actions())
+        self.catalog_type_var.trace_add("write", lambda *_args: self._refresh_catalog_actions())
+        self._refresh_catalog_actions()
 
     def _build_backlight_tab(self) -> None:
         settings = BacklightSettings.from_dict(self.profile.backlighting)
@@ -688,11 +815,383 @@ class OverheadLinkApp(tk.Tk):
             "Verification": assignment.status.value,
             "Source": assignment.source_revision,
             "Fenix press": assignment.sim.on_press or "Not assigned",
+            "Fenix release": assignment.sim.on_release or "Not assigned",
             "Fenix feedback": assignment.sim.feedback or "Not assigned",
             "Notes": assignment.notes or "None",
         }
         self.assignment_detail.delete("1.0", "end")
         self.assignment_detail.insert("1.0", "\n".join(f"{key}: {value}" for key, value in detail.items()))
+        if hasattr(self, "catalog_target_var"):
+            self.catalog_target_var.set(
+                f"Target pin: {board.name} {assignment.pin} — {assignment.control} ({assignment.mode.value})"
+            )
+            if self.catalog_compatible_var.get():
+                self._refresh_catalog_actions()
+
+    def _selected_pin_assignment(self):
+        if self.selected_assignment is None:
+            return None
+        board_id, assignment_id = self.selected_assignment
+        board = self.profile.board(board_id)
+        assignment = board.assignment(assignment_id) if board else None
+        if board is None or assignment is None:
+            return None
+        return board, assignment
+
+    def _refresh_catalog_actions(self) -> None:
+        if not hasattr(self, "catalog_tree"):
+            return
+        selected = self.catalog_tree.selection()
+        selected_id = selected[0] if selected else None
+        self.catalog_tree.delete(*self.catalog_tree.get_children())
+        if self.fenix_catalog is None:
+            return
+        query = self.catalog_search_var.get().strip().casefold()
+        system = self.catalog_system_var.get()
+        preset_type = self.catalog_type_var.get()
+        target = self._selected_pin_assignment()
+        target_assignment = target[1] if target else None
+        for action in self.fenix_catalog.actions:
+            if system != "All systems" and action.system != system:
+                continue
+            if preset_type != "All types" and action.preset_type != preset_type:
+                continue
+            if self.catalog_compatible_var.get() and target_assignment is not None and not action.compatible_with(target_assignment.mode):
+                continue
+            searchable = " ".join((action.system, action.label, action.path, action.code, action.description)).casefold()
+            if query and query not in searchable:
+                continue
+            self.catalog_tree.insert(
+                "",
+                "end",
+                iid=action.id,
+                values=(action.system, action.label, action.preset_type, f"{action.status} v{action.version}"),
+            )
+        if selected_id and self.catalog_tree.exists(selected_id):
+            self.catalog_tree.selection_set(selected_id)
+            self.catalog_tree.focus(selected_id)
+            self.catalog_tree.see(selected_id)
+            self._catalog_action_selected()
+
+    def _catalog_action_selected(self, _event: object = None) -> None:
+        selection = self.catalog_tree.selection()
+        if not selection or self.fenix_catalog is None:
+            return
+        action = self.fenix_catalog.action(selection[0])
+        if action is None:
+            return
+        details = {
+            "Action": action.label,
+            "System": action.system,
+            "Type": action.preset_type,
+            "HubHop revision": f"{action.status} v{action.version}",
+            "Author": action.author,
+            "Description": action.description or "None",
+            "RPN / LVar expression": action.code,
+            "HubHop path": action.path,
+            "Action ID": action.id,
+        }
+        self.catalog_detail.delete("1.0", "end")
+        self.catalog_detail.insert("1.0", "\n\n".join(f"{key}:\n{value}" for key, value in details.items()))
+
+    def _start_catalog_action_learning(self) -> None:
+        selection = self.catalog_tree.selection()
+        if not selection or self.fenix_catalog is None:
+            messagebox.showinfo("Find Korry pin", "Select a Fenix input action first.")
+            return
+        action = self.fenix_catalog.action(selection[0])
+        if action is None:
+            return
+        if action.preset_type != "Input":
+            messagebox.showinfo(
+                "Find Korry pin",
+                "Korry learning is for digital input actions. Potentiometers use Find Correct Pin on the Assign Pins tab, and outputs use the safe lamp test.",
+            )
+            return
+        connected_megas = [
+            board
+            for board in self.board_manager.boards_by_port.values()
+            if board.online and board.board_type.upper() == "MEGA" and board.connection
+        ]
+        if not connected_megas:
+            messagebox.showwarning("Find Korry pin", "No assigned OverheadLink Mega is online. Connect the panels and rescan first.")
+            return
+        for connected in connected_megas:
+            connected.connection.send(self._message("LEARN_ANALOG", 0))
+            connected.connection.send(self._message("LEARN_IN", 1))
+        self.analog_learning = None
+        self.repair_target = None
+        self.learning = DigitalLearningSession()
+        self.catalog_learning_action_id = action.id
+        self.catalog_learning_status.configure(
+            text=f"Learning {action.label}: operate the matching Korry twice. Monitoring every connected Mega…"
+        )
+        self._log(f"FENIX ACTION PIN SEARCH started: {action.label} ({action.id})")
+
+    def _cancel_catalog_action_learning(self) -> None:
+        if self.catalog_learning_action_id is None:
+            self.catalog_learning_status.configure(text="No Fenix-action Korry learning session is running.")
+            return
+        for connected in self.board_manager.boards_by_port.values():
+            if connected.online and connected.connection:
+                connected.connection.send(self._message("LEARN_IN", 0))
+        self.learning = None
+        self.catalog_learning_action_id = None
+        self.catalog_learning_status.configure(text="Korry learning cancelled.")
+        self._log("FENIX ACTION PIN SEARCH cancelled")
+
+    def _choose_fenix_action(self) -> None:
+        target = self._selected_pin_assignment()
+        if target is None:
+            messagebox.showinfo("Choose Fenix action", "Select a physical pin assignment first.")
+            return
+        if target[1].mode == PinMode.WS2812_DATA:
+            messagebox.showinfo("Choose Fenix action", "The backlight Nano does not use a Fenix overhead action.")
+            return
+        self.catalog_compatible_var.set(True)
+        self.catalog_search_var.set("")
+        self.catalog_system_var.set("All systems")
+        self.catalog_type_var.set("All types")
+        self._refresh_catalog_actions()
+        self.tabs.select(self.fenix_actions_tab)
+
+    def _assign_catalog_action(self) -> None:
+        target = self._selected_pin_assignment()
+        if target is None:
+            messagebox.showinfo("Assign Fenix action", "First select the physical control or LED on the Assign Pins tab.")
+            self.tabs.select(self.assign_tab)
+            return
+        selection = self.catalog_tree.selection()
+        if not selection or self.fenix_catalog is None:
+            messagebox.showinfo("Assign Fenix action", "Select a MobiFlight Fenix action from the catalogue.")
+            return
+        board, assignment = target
+        action = self.fenix_catalog.action(selection[0])
+        if action is None:
+            return
+        if not action.compatible_with(assignment.mode):
+            messagebox.showerror(
+                "Incompatible Fenix action",
+                f"{action.preset_type} cannot be assigned to {assignment.mode.value}.\n\n"
+                "Turn on ‘Compatible with selected pin’ to show suitable actions only.",
+            )
+            return
+
+        if assignment.mode == PinMode.DIGITAL_INPUT:
+            operated = messagebox.askyesnocancel(
+                "Assign input action",
+                f"Physical control:\n{board.name} {assignment.pin} — {assignment.control}\n\n"
+                f"MobiFlight action:\n{action.label}\n\n"
+                "YES = run when the control is operated/pressed\n"
+                "NO = run when the control is released\n"
+                "CANCEL = make no change",
+            )
+            if operated is None:
+                return
+            slot = "press" if operated else "release"
+        elif assignment.mode == PinMode.ANALOG_INPUT:
+            if "@" not in action.code:
+                messagebox.showerror("Assign potentiometer action", "This action does not contain MobiFlight's @ value placeholder.")
+                return
+            if not messagebox.askyesno(
+                "Assign potentiometer action",
+                f"Use {action.label} for {board.name} {assignment.pin} — {assignment.control}?",
+            ):
+                return
+            slot = "press"
+        else:
+            if not messagebox.askyesno(
+                "Assign annunciator feedback",
+                f"Use {action.label} as the live Fenix feedback for\n{board.name} {assignment.pin} — {assignment.control}?",
+            ):
+                return
+            slot = "feedback"
+
+        evidence = f"User selected MobiFlight HubHop action {action.id} ({action.label})"
+        source_revision = f"HubHop {self.fenix_catalog.snapshot_utc[:10]} action {action.id} v{action.version}"
+        try:
+            previous = self.profile_store.assign_fenix_action(
+                self.profile,
+                board.id,
+                assignment.id,
+                slot,
+                action.code,
+                source_revision,
+                evidence,
+            )
+        except (KeyError, ValueError, OSError) as error:
+            messagebox.showerror("Assign Fenix action", f"The action could not be saved:\n{error}")
+            return
+        self.fenix_subscribed = False
+        self.last_analog_values.pop((board.id, assignment.id), None)
+        self._refresh_profile_views()
+        iid = f"{board.id}::{assignment.id}"
+        if self.assignment_tree.exists(iid):
+            self.assignment_tree.selection_set(iid)
+            self.assignment_tree.focus(iid)
+            self.assignment_tree.see(iid)
+            self._assignment_selected()
+        self._log(
+            f"FENIX ACTION {slot.upper()} {board.name} {assignment.pin} {assignment.control}: "
+            f"{action.label} ({action.id}); previous={previous or 'none'}"
+        )
+        if slot == "feedback":
+            if self.offline_fenix.get():
+                self._toggle_fenix()
+            else:
+                self.fenix.close()
+                self._begin_fenix_connect(force=True)
+        messagebox.showinfo(
+            "Fenix action saved",
+            f"{action.label}\n\nis now assigned to {board.name} {assignment.pin} — {assignment.control}.\n\n"
+            "A timestamped profile backup was created.",
+        )
+
+    def _show_assignment_menu(self, event: tk.Event) -> None:
+        row = self.assignment_tree.identify_row(event.y)
+        if not row:
+            return
+        self.assignment_tree.selection_set(row)
+        self.assignment_tree.focus(row)
+        self._assignment_selected()
+        board_id, assignment_id = row.split("::", 1)
+        board = self.profile.board(board_id)
+        assignment = board.assignment(assignment_id) if board else None
+        if assignment is None:
+            return
+        menu = tk.Menu(self, tearoff=False)
+        if assignment.mode in {PinMode.DIGITAL_INPUT, PinMode.ANALOG_INPUT}:
+            menu.add_command(label="Map/Reassign by Operating Control", command=self._start_pin_repair)
+        elif assignment.mode == PinMode.DIGITAL_OUTPUT:
+            menu.add_command(label="Find Correct Output Pin Safely", command=self._find_output_pin)
+        menu.add_command(label="Choose Fenix Action…", command=self._choose_fenix_action)
+        menu.add_command(label="Edit Pin Manually…", command=self._edit_selected_assignment)
+        try:
+            menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            menu.grab_release()
+
+    def _edit_selected_assignment(self) -> None:
+        if self.selected_assignment is None:
+            messagebox.showinfo("Edit pin", "Select an assignment first.")
+            return
+        source_board_id, assignment_id = self.selected_assignment
+        source_board = self.profile.board(source_board_id)
+        assignment = source_board.assignment(assignment_id) if source_board else None
+        if source_board is None or assignment is None or assignment.mode == PinMode.WS2812_DATA:
+            messagebox.showinfo("Edit pin", "Select a Mega switch, potentiometer, selector contact, rotary contact, or LED assignment.")
+            return
+
+        mega_boards = [board for board in self.profile.boards if board.kind == BoardKind.MEGA]
+        board_by_name = {board.name: board for board in mega_boards}
+        pins = [f"A{number}" for number in range(16)] if assignment.mode == PinMode.ANALOG_INPUT else [
+            *[f"D{number}" for number in range(2, 54)],
+            *[f"A{number}" for number in range(16)],
+        ]
+
+        dialog = tk.Toplevel(self)
+        dialog.title(f"Edit Pin — {assignment.control}")
+        dialog.transient(self)
+        dialog.resizable(False, False)
+        dialog.configure(bg="#111820")
+        dialog.grab_set()
+        body = ttk.Frame(dialog, style="Card.TFrame", padding=22)
+        body.pack(fill="both", expand=True, padx=12, pady=12)
+
+        board_var = tk.StringVar(value=source_board.name)
+        pin_var = tk.StringVar(value=assignment.pin)
+        active_low_var = tk.BooleanVar(value=assignment.active_low)
+        debounce_var = tk.IntVar(value=assignment.debounce_ms)
+
+        ttk.Label(body, text=assignment.control, style="Title.TLabel").grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 14))
+        ttk.Label(body, text="Role / mode", style="Status.TLabel").grid(row=1, column=0, sticky="w", pady=5)
+        ttk.Label(body, text=f"{assignment.role.value} / {assignment.mode.value}", style="Status.TLabel").grid(row=1, column=1, sticky="w", pady=5)
+        ttk.Label(body, text="Mega panel", style="Status.TLabel").grid(row=2, column=0, sticky="w", pady=5)
+        ttk.Combobox(body, textvariable=board_var, values=list(board_by_name), state="readonly", width=34).grid(row=2, column=1, sticky="ew", pady=5)
+        ttk.Label(body, text="Pin", style="Status.TLabel").grid(row=3, column=0, sticky="w", pady=5)
+        ttk.Combobox(body, textvariable=pin_var, values=pins, state="normal", width=34).grid(row=3, column=1, sticky="ew", pady=5)
+        ttk.Checkbutton(
+            body,
+            text="Active low (switch/contact connects the pin to GND)",
+            variable=active_low_var,
+        ).grid(row=4, column=0, columnspan=2, sticky="w", pady=7)
+        ttk.Label(body, text="Debounce (ms)", style="Status.TLabel").grid(row=5, column=0, sticky="w", pady=5)
+        debounce = ttk.Spinbox(body, from_=0, to=1000, textvariable=debounce_var, width=8)
+        debounce.grid(row=5, column=1, sticky="w", pady=5)
+        if assignment.mode != PinMode.DIGITAL_INPUT:
+            debounce.configure(state="disabled")
+        ttk.Label(
+            body,
+            text="Saving creates a timestamped backup. Duplicate pins, D0/D1 and non-analogue potentiometer pins are blocked.",
+            style="Status.TLabel",
+            wraplength=470,
+        ).grid(row=6, column=0, columnspan=2, sticky="ew", pady=(12, 8))
+
+        buttons = ttk.Frame(body, style="Card.TFrame")
+        buttons.grid(row=7, column=0, columnspan=2, sticky="e", pady=(8, 0))
+        ttk.Button(buttons, text="Cancel", command=dialog.destroy).pack(side="right")
+
+        def save_change() -> None:
+            target = board_by_name.get(board_var.get())
+            if target is None:
+                messagebox.showerror("Edit pin", "Select a Mega panel.", parent=dialog)
+                return
+            try:
+                candidate = canonical_pin(pin_var.get())
+                debounce_ms = int(debounce_var.get())
+            except (ValueError, tk.TclError) as error:
+                messagebox.showerror("Edit pin", f"The pin or debounce value is invalid:\n{error}", parent=dialog)
+                return
+            if candidate in {"D0", "D1"}:
+                messagebox.showerror("Edit pin", "D0 and D1 are reserved for Mega USB serial communication.", parent=dialog)
+                return
+            if assignment.mode == PinMode.ANALOG_INPUT and not candidate.startswith("A"):
+                messagebox.showerror("Edit pin", "A potentiometer must use A0 through A15.", parent=dialog)
+                return
+            if assignment.mode == PinMode.DIGITAL_OUTPUT and (target is not source_board or candidate != assignment.pin):
+                if not messagebox.askyesno(
+                    "Confirm output pin",
+                    "This is an LED output. Only continue if this is a known wired output pin; an incorrect output assignment could drive the wrong circuit.\n\nSave this change?",
+                    parent=dialog,
+                ):
+                    return
+            try:
+                old_board, old_pin, new_board, new_pin = self.profile_store.repair_assignment(
+                    self.profile,
+                    source_board_id,
+                    assignment_id,
+                    target.id,
+                    candidate,
+                    "Manual in-app pin edit",
+                    active_low=active_low_var.get(),
+                    debounce_ms=debounce_ms,
+                    verification_status=VerificationStatus.REVISED,
+                )
+            except (KeyError, ValueError, OSError) as error:
+                messagebox.showerror("Pin not changed", str(error), parent=dialog)
+                return
+            self.configured_boards.discard(source_board_id)
+            self.configured_boards.discard(target.id)
+            self.selected_assignment = (target.id, assignment_id)
+            self._refresh_profile_views()
+            iid = f"{target.id}::{assignment_id}"
+            if self.assignment_tree.exists(iid):
+                self.assignment_tree.selection_set(iid)
+                self.assignment_tree.focus(iid)
+                self.assignment_tree.see(iid)
+                self._assignment_selected()
+            self.learning_status.configure(text=f"Saved: {new_board} {new_pin}. Reload that board's validated map when ready.")
+            self._log(f"MANUAL PIN EDIT {assignment.control}: {old_board} {old_pin} -> {new_board} {new_pin}")
+            dialog.destroy()
+            messagebox.showinfo(
+                "Pin assignment saved",
+                f"{assignment.control}\n\n{old_board} {old_pin} → {new_board} {new_pin}\n\nA profile backup was created.",
+            )
+
+        ttk.Button(buttons, text="Save Assignment", command=save_change).pack(side="right", padx=(0, 8))
+        body.columnconfigure(1, weight=1)
+        dialog.update_idletasks()
+        dialog.geometry(f"+{self.winfo_rootx() + 180}+{self.winfo_rooty() + 120}")
 
     def _start_pin_repair(self) -> None:
         if self.selected_assignment is None:
@@ -704,6 +1203,9 @@ class OverheadLinkApp(tk.Tk):
         if assignment is None or assignment.mode not in {PinMode.DIGITAL_INPUT, PinMode.ANALOG_INPUT}:
             messagebox.showinfo("Find Correct Pin", "Select a switch, selector contact, rotary contact, or potentiometer. Outputs use the safe pulse test.")
             return
+        self.catalog_learning_action_id = None
+        if hasattr(self, "catalog_learning_status"):
+            self.catalog_learning_status.configure(text="No Fenix-action Korry learning session is running.")
         for connected in self.board_manager.boards_by_port.values():
             if connected.online and connected.connection:
                 connected.connection.send(self._message("LEARN_IN", 0))
@@ -1034,6 +1536,17 @@ class OverheadLinkApp(tk.Tk):
         self._subscribe_profile_feedback()
         if not self.fenix_connecting:
             self.sim_status.configure(text=f"Fenix: {self.fenix.status.detail}")
+        if self.learning is not None and self.learning.expired:
+            for connected in self.board_manager.boards_by_port.values():
+                if connected.online and connected.connection:
+                    connected.connection.send(self._message("LEARN_IN", 0))
+            if self.catalog_learning_action_id is not None:
+                self.catalog_learning_status.configure(text="Korry learning timed out. Select the action and try again.")
+                self.catalog_learning_action_id = None
+            else:
+                self.learning_status.configure(text="Pin search timed out. Select the assignment and try again.")
+                self.repair_target = None
+            self.learning = None
         self.after(250, self._poll_events)
 
     def _handle_board_message(self, board: ConnectedBoard, message: ProtocolMessage) -> None:
@@ -1059,7 +1572,10 @@ class OverheadLinkApp(tk.Tk):
             if self.learning and not self.learning.expired:
                 result = self.learning.observe(board.board_name or board.port, pin, value)
                 if result:
-                    self._complete_repair(result)
+                    if self.catalog_learning_action_id is not None:
+                        self._complete_catalog_action_learning(result)
+                    else:
+                        self._complete_repair(result)
             self._dispatch_input(board, pin, value)
         elif message.message_type == "AIN" and len(message.parts) >= 3:
             pin = int(message.parts[0])
@@ -1067,10 +1583,93 @@ class OverheadLinkApp(tk.Tk):
             self._log(f"ANALOG {board.board_name} {canonical_pin(pin)} = {value}")
             if self.analog_learning is not None:
                 self.analog_learning.observe(board.board_name or board.port, pin, value)
+            else:
+                self._dispatch_analog_input(board, pin, value)
         elif message.message_type == "PRESET" and len(message.parts) >= 2:
             self.backlight_status.configure(text=f"Nano reports {message.parts[0]} — {message.parts[1]}/255")
         elif message.message_type == "ACK" and message.parts and message.parts[0] == "COLOR":
             self._log("BACKLIGHT-NANO confirmed colour change")
+
+    def _complete_catalog_action_learning(self, result: DigitalLearningResult) -> None:
+        action_id = self.catalog_learning_action_id
+        action = self.fenix_catalog.action(action_id) if self.fenix_catalog and action_id else None
+        for connected in self.board_manager.boards_by_port.values():
+            if connected.online and connected.connection:
+                connected.connection.send(self._message("LEARN_IN", 0))
+        self.learning = None
+        self.catalog_learning_action_id = None
+        if action is None:
+            self.catalog_learning_status.configure(text="The selected Fenix action is no longer available.")
+            return
+        board = next((item for item in self.profile.boards if item.name.casefold() == result.board_id.casefold()), None)
+        assignment = next(
+            (
+                item
+                for item in board.assignments
+                if item.enabled and item.pin == result.pin and item.mode == PinMode.DIGITAL_INPUT
+            ),
+            None,
+        ) if board else None
+        if board is None or assignment is None:
+            self.catalog_learning_status.configure(text=f"Detected {result.board_id} {result.pin}, but that pin is not declared as an input.")
+            messagebox.showwarning(
+                "Korry detected but not mapped",
+                f"The Korry was detected on {result.board_id} {result.pin}, but the profile does not currently declare that pin as a digital input.\n\n"
+                "Use Edit Pin Manually on the Assign Pins tab to correct the physical map, then repeat this action assignment.",
+            )
+            return
+        operated = messagebox.askyesnocancel(
+            "Korry and action matched",
+            f"Detected Korry:\n{board.name} {result.pin} — {assignment.control}\n"
+            f"Polarity: {'active low' if result.active_low else 'active high'} · Confidence: {result.confidence:.0%}\n\n"
+            f"Fenix action:\n{action.label}\n\n"
+            "YES = run when operated/pressed\n"
+            "NO = run when released\n"
+            "CANCEL = make no change",
+        )
+        if operated is None:
+            self.catalog_learning_status.configure(text="Korry detected; action assignment cancelled.")
+            return
+        slot = "press" if operated else "release"
+        previous_active_low = assignment.active_low
+        assignment.active_low = result.active_low
+        evidence = (
+            f"User matched MobiFlight HubHop action {action.id} ({action.label}) by operating "
+            f"{board.name} {result.pin} twice at {result.confidence:.0%} confidence"
+        )
+        source_revision = f"HubHop {self.fenix_catalog.snapshot_utc[:10]} action {action.id} v{action.version}"
+        try:
+            self.profile_store.assign_fenix_action(
+                self.profile,
+                board.id,
+                assignment.id,
+                slot,
+                action.code,
+                source_revision,
+                evidence,
+            )
+        except (KeyError, ValueError, OSError) as error:
+            assignment.active_low = previous_active_low
+            self.catalog_learning_status.configure(text=f"The detected action could not be saved: {error}")
+            messagebox.showerror("Assign detected Korry", f"The action could not be saved:\n{error}")
+            return
+        self.selected_assignment = (board.id, assignment.id)
+        self._refresh_profile_views()
+        iid = f"{board.id}::{assignment.id}"
+        if self.assignment_tree.exists(iid):
+            self.assignment_tree.selection_set(iid)
+            self.assignment_tree.focus(iid)
+            self.assignment_tree.see(iid)
+            self._assignment_selected()
+        self.catalog_learning_status.configure(
+            text=f"Mapped {action.label} to {board.name} {result.pin} ({slot})."
+        )
+        self._log(f"FENIX ACTION AUTO-MAPPED {slot.upper()}: {action.label} -> {board.name} {result.pin}")
+        messagebox.showinfo(
+            "Fenix action mapped",
+            f"{action.label}\n\nis now mapped to {board.name} {result.pin} — {assignment.control}.\n\n"
+            "The detected polarity was saved and a timestamped profile backup was created.",
+        )
 
     def _complete_repair(self, result: DigitalLearningResult) -> None:
         if self.repair_target is None:
@@ -1126,6 +1725,33 @@ class OverheadLinkApp(tk.Tk):
                 self.fenix.execute(assignment.sim.on_release)
             except RuntimeError as error:
                 self._log(f"FENIX BLOCKED {assignment.id}: {error}")
+
+    def _dispatch_analog_input(self, connected: ConnectedBoard, numeric_pin: int, raw_value: int) -> None:
+        board = next((item for item in self.profile.boards if item.name.casefold() == connected.board_name.casefold()), None)
+        if board is None:
+            return
+        assignment = next(
+            (
+                item
+                for item in board.assignments
+                if item.enabled and item.numeric_pin == numeric_pin and item.mode == PinMode.ANALOG_INPUT
+            ),
+            None,
+        )
+        if assignment is None or not assignment.sim.on_press:
+            return
+        value = calibrated_analog_value(raw_value, assignment.calibration)
+        state_key = (board.id, assignment.id)
+        previous = self.last_analog_values.get(state_key)
+        if previous is not None and abs(value - previous) < 2:
+            return
+        command = assignment.sim.on_press.replace("@", str(value))
+        try:
+            self.fenix.execute(command)
+            self.last_analog_values[state_key] = value
+            self._log(f"FENIX ANALOG {assignment.id}: raw={raw_value} calibrated={value}")
+        except RuntimeError as error:
+            self._log(f"FENIX BLOCKED {assignment.id}: {error}")
 
     def _on_fenix_feedback(self, assignment_id: str, value: float) -> None:
         # SimConnect callbacks arrive on a worker thread; Tk and serial-output

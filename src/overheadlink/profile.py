@@ -126,7 +126,9 @@ class ProfileStore:
         evidence: str,
         *,
         active_low: bool | None = None,
+        debounce_ms: int | None = None,
         calibration: dict[str, float | int | bool] | None = None,
+        verification_status: VerificationStatus = VerificationStatus.AUTO_LEARNED,
     ) -> tuple[str, str, str, str]:
         source = profile.board(source_board_id)
         target = profile.board(target_board_id)
@@ -155,9 +157,13 @@ class ProfileStore:
         assignment.pin = candidate
         if active_low is not None:
             assignment.active_low = active_low
+        if debounce_ms is not None:
+            if not 0 <= debounce_ms <= 1000:
+                raise ValueError("Debounce must be between 0 and 1000 milliseconds")
+            assignment.debounce_ms = debounce_ms
         if calibration is not None:
             assignment.calibration = dict(calibration)
-        assignment.status = VerificationStatus.AUTO_LEARNED
+        assignment.status = verification_status
         assignment.notes = (assignment.notes + " " + evidence).strip()
         reason = f"{assignment.control}: {old_board_name} {previous} -> {target.name} {candidate}; {evidence}"
         self.save(profile, reason)
@@ -192,6 +198,49 @@ class ProfileStore:
             f"{second.control} {second_pin}->{first_pin}; {evidence}",
         )
         return first_pin, second_pin
+
+    def assign_fenix_action(
+        self,
+        profile: OverheadProfile,
+        board_id: str,
+        assignment_id: str,
+        slot: str,
+        code: str,
+        source_revision: str,
+        evidence: str,
+    ) -> str | None:
+        board = profile.board(board_id)
+        if board is None:
+            raise KeyError(f"Unknown board: {board_id}")
+        assignment = board.assignment(assignment_id)
+        if assignment is None:
+            raise KeyError(f"Unknown assignment: {assignment_id}")
+        code = code.strip()
+        if not code:
+            raise ValueError("The Fenix action does not contain an RPN expression")
+        if slot in {"press", "release"}:
+            if assignment.mode not in {PinMode.DIGITAL_INPUT, PinMode.ANALOG_INPUT}:
+                raise ValueError("Input actions can only be assigned to a physical input")
+            if assignment.mode == PinMode.ANALOG_INPUT and slot != "press":
+                raise ValueError("A potentiometer uses one value expression, not a release action")
+            previous = assignment.sim.on_press if slot == "press" else assignment.sim.on_release
+            if slot == "press":
+                assignment.sim.on_press = code
+            else:
+                assignment.sim.on_release = code
+        elif slot == "feedback":
+            if assignment.mode != PinMode.DIGITAL_OUTPUT:
+                raise ValueError("Feedback actions can only be assigned to an annunciator output")
+            previous = assignment.sim.feedback
+            assignment.sim.feedback = code
+        else:
+            raise ValueError(f"Unknown Fenix action slot: {slot}")
+        assignment.sim.verified = True
+        assignment.status = VerificationStatus.REVISED
+        assignment.source_revision = source_revision
+        assignment.notes = (assignment.notes + " " + evidence).strip()
+        self.save(profile, f"{assignment.control}: Fenix {slot} action updated; {evidence}")
+        return previous
 
 
 def issue_summary(issues: Iterable[ValidationIssue]) -> tuple[int, int]:

@@ -12,7 +12,7 @@
 #include <wchar.h>
 
 #define APP_NAME L"OverheadLink"
-#define APP_VERSION L"0.3.5"
+#define APP_VERSION L"0.3.6"
 #define PATH_CAPACITY 4096
 #define COPY_BUFFER_SIZE (1024 * 1024)
 
@@ -204,13 +204,13 @@ static BOOL marker_matches(const wchar_t *path) {
     DWORD read = 0;
     const BOOL ok = ReadFile(file, value, sizeof(value) - 1, &read, NULL);
     CloseHandle(file);
-    return ok && strncmp(value, "0.3.5", 5) == 0;
+    return ok && strncmp(value, "0.3.6", 5) == 0;
 }
 
 static BOOL write_marker(const wchar_t *path) {
     HANDLE file = CreateFileW(path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (file == INVALID_HANDLE_VALUE) return FALSE;
-    static const char value[] = "0.3.5\r\n";
+    static const char value[] = "0.3.6\r\n";
     DWORD written = 0;
     const BOOL ok = WriteFile(file, value, (DWORD)(sizeof(value) - 1), &written, NULL) && written == sizeof(value) - 1;
     CloseHandle(file);
@@ -594,7 +594,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previous, PWSTR command_line, 
     (void)command_line;
     (void)show_command;
 
-    HANDLE setup_mutex = CreateMutexW(NULL, TRUE, L"Local\\OverheadLink-Setup-v0.3.5");
+    HANDLE setup_mutex = CreateMutexW(NULL, TRUE, L"Local\\OverheadLink-Setup-v0.3.6");
     if (!setup_mutex || GetLastError() == ERROR_ALREADY_EXISTS) {
         MessageBoxW(NULL, L"OverheadLink is already starting. Please wait a moment.", APP_NAME, MB_OK | MB_ICONINFORMATION);
         if (setup_mutex) CloseHandle(setup_mutex);
