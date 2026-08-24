@@ -29,7 +29,7 @@ jobs:
           python -c "import pathlib,zipfile; wheel=next(pathlib.Path('vendor/simconnect-package').glob('*.whl')); z=zipfile.ZipFile(wheel); member=next(n for n in z.namelist() if n.endswith('/SimConnect.dll')); pathlib.Path('vendor/SimConnect.dll').write_bytes(z.read(member))"
 
       - name: Compile Python sources
-        run: python -m compileall -q src tests run_overheadlink.py
+        run: python -m compileall -q src tests run_overheadlink.py installer/prepare_bootstrap.py
 
       - name: Test
         run: python -m unittest discover -s tests -v
@@ -47,9 +47,10 @@ jobs:
       - name: Build native setup launcher
         shell: cmd
         run: |
+          python installer\prepare_bootstrap.py || exit /b 1
           python installer\generate_icon.py || exit /b 1
           rc /nologo /fo installer\overheadlink.res installer\bootstrap.rc || exit /b 1
-          cl /nologo /O2 /W3 /DUNICODE /D_UNICODE /MT /Fo:installer\bootstrap.obj /c installer\bootstrap.c || exit /b 1
+          cl /nologo /O2 /W3 /DUNICODE /D_UNICODE /MT /Fo:installer\bootstrap.obj /c installer\bootstrap_build.c || exit /b 1
           link /nologo /SUBSYSTEM:WINDOWS /OUT:installer\OverheadLink_base.exe installer\bootstrap.obj installer\overheadlink.res bcrypt.lib shell32.lib ole32.lib comctl32.lib user32.lib gdi32.lib advapi32.lib || exit /b 1
 
       - name: Package one-file executable
