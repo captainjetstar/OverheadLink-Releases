@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+import threading
 import tkinter as tk
 from tkinter import messagebox
 from typing import Any
@@ -10,7 +11,6 @@ from .bootstrap import prepare_profile
 from .models import PeripheralType
 from .preferences import canonical_port
 from .remote import RemotePanelServer, install_remote_tab
-from .simulator import SimulatorState
 
 
 PERIPHERAL_FEEDBACK_PREFIX = "@peripheral:"
@@ -24,11 +24,11 @@ def version_tuple(value: str) -> tuple[int, ...]:
 
 
 class EnhancedOverheadLinkApp(OverheadLinkApp):
-    """Reliability layer for v0.3.8.
+    """Reliability layer for OverheadLink.
 
-    The original UI remains deliberately stable while hardware peripherals and
-    flight-critical error handling are isolated here. This keeps the update
-    small and reversible while removing the v0.3.7 bootstrap monkey-patches.
+    Hardware probing, simulator recovery and peripheral drivers are kept away
+    from Tk's event loop wherever possible so a slow USB or simulator endpoint
+    cannot freeze the desktop UI.
     """
 
     def __init__(self) -> None:
@@ -36,6 +36,12 @@ class EnhancedOverheadLinkApp(OverheadLinkApp):
         self._peripheral_values: dict[str, float] = {}
         self._display_dash_sent: set[str] = set()
         self.remote_panel_server: RemotePanelServer | None = None
+        self._scan_in_progress = False
+        self._scan_requested = False
+        self._scan_poll_scheduled = False
+        self._scan_result_count = 0
+        self._scan_error = ""
+        self._scan_thread: threading.Thread | None = None
         super().__init__()
         try:
             self.remote_panel_server = RemotePanelServer(self)
@@ -48,9 +54,66 @@ class EnhancedOverheadLinkApp(OverheadLinkApp):
             self.remote_panel_server = None
             self._log(f"REMOTE PANEL unavailable: {error}")
 
+    # ---------------- Responsive USB discovery ----------------
+
+    def _scan_boards(self) -> None:
+        """Probe serial devices without blocking Tk's UI thread.
+
+        Opening a Windows COM port can block inside a device driver. Older
+        versions called BoardManager.scan() from Tk every five seconds, which
+        could make the whole application show "Not responding". Only one scan
+        may run at a time; additional requests are coalesced.
+        """
+        if self._scan_in_progress:
+            self._scan_requested = True
+            return
+        self._scan_in_progress = True
+        self._scan_requested = False
+        self._scan_error = ""
+        if hasattr(self, "board_status"):
+            self.board_status.configure(text="Boards: scanning…")
+
+        def worker() -> None:
+            try:
+                self._scan_result_count = len(self.board_manager.scan())
+                self._scan_error = ""
+            except Exception as error:
+                self._scan_result_count = 0
+                self._scan_error = str(error)
+            finally:
+                self._scan_in_progress = False
+
+        self._scan_thread = threading.Thread(target=worker, name="OverheadLink-USBScan", daemon=True)
+        self._scan_thread.start()
+        self._schedule_scan_poll()
+
+    def _schedule_scan_poll(self) -> None:
+        if self._scan_poll_scheduled:
+            return
+        self._scan_poll_scheduled = True
+        self.after(100, self._poll_scan_completion)
+
+    def _poll_scan_completion(self) -> None:
+        self._scan_poll_scheduled = False
+        if self._scan_in_progress:
+            self._schedule_scan_poll()
+            return
+        if self._scan_error:
+            self._log(f"USB scan failed: {self._scan_error}")
+        else:
+            self._log(f"USB scan completed: {self._scan_result_count} candidate port(s)")
+        self._refresh_connections()
+        if self._scan_requested:
+            self._scan_requested = False
+            self._scan_boards()
+
+    def _auto_rescan(self) -> None:
+        self._scan_boards()
+        self.after(5000, self._auto_rescan)
+
     def _auto_runtime_tick(self) -> None:
-        # v0.3.7 only retried DISCONNECTED/ERROR. A registration timeout leaves
-        # the bridge in MSFS_CONNECTED, which could permanently stop retries.
+        # Keep retrying until the actual Fenix/WASM bridge is ready. Merely
+        # having an MSFS SimConnect session is not sufficient.
         if not self.offline_fenix.get() and not self.fenix_connecting and not self.fenix.ready:
             self._dash_all_displays()
             self._begin_fenix_connect(force=True)
