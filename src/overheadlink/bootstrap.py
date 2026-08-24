@@ -11,6 +11,9 @@ from typing import Any
 
 PROFILE_FILENAME = "a320_fenix_overhead.json"
 SPLIT_MIGRATION_ID = "0.3.7-hydfuel-split"
+# Backward-compatible public name retained for the v0.3.7 tests and any
+# existing helper code that imported it directly.
+MIGRATION_ID = SPLIT_MIGRATION_ID
 PERIPHERAL_MIGRATION_ID = "0.3.8-tm1637-peripheral"
 BAT2_SIM_EXPRESSION = "(A:ELECTRICAL BATTERY VOLTAGE:2, Volts)"
 
@@ -248,7 +251,6 @@ def _write_payload(path: Path, payload: dict[str, Any]) -> None:
     temporary = path.with_suffix(path.suffix + ".tmp")
     try:
         temporary.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-        # Verify the complete JSON before replacing the live copy.
         json.loads(temporary.read_text(encoding="utf-8"))
         temporary.replace(path)
     except Exception:
