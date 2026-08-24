@@ -3,7 +3,7 @@
 ## Before flashing
 
 1. Back up the existing MobiFlight configuration for every overhead Mega.
-2. Confirm which physical board will use each identity: `ELEC-HYD-FUEL`, `AIR-COND`, `EXT-LIGHT-OVERHEAD`, and `BACKLIGHT-NANO`. `APU-PANEL` and `LEFT-ADIRS-GPWS-CALL-OXY` are optional profiles.
+2. Confirm which physical board will use each identity: `ELEC`, `HYD-FUEL`, `AIR-COND`, `EXT-LIGHT-OVERHEAD`, and `BACKLIGHT-NANO`. `APU-PANEL` and `LEFT-ADIRS-GPWS-CALL-OXY` are optional profiles.
 3. Close MobiFlight Connector before running OverheadLink. It may remain installed, and its WASM module must remain in the MSFS Community folder.
 4. Keep the Nano/WS2812B 5 V supply fused, join PSU and Nano grounds, retain the 330-ohm data resistor, and retain the 1000 µF supply capacitor.
 
@@ -17,10 +17,13 @@ After the application has run once, the **Firmware Files** button opens both emb
 
 ## Start the desktop app
 
-1. Double-click `OverheadLink_v0.3.6_Windows_x64.exe`. Its first run installs the embedded private runtime, USB serial support, and SimConnect client automatically, then creates an **OverheadLink** desktop shortcut.
-2. On **Connections**, right-click each OverheadLink Mega, choose **Assign to…**, and select its panel identity. Right-click unrelated SL3, Rowsfire, or MobiFlight ports and choose **Ignore this COM port**. Both choices persist after restart.
-3. The validated map loads automatically whenever an identified Mega comes online. Check that the profile indicator shows zero errors; the manual **Load All Online Maps** button remains available for troubleshooting.
-4. On **Backlighting**, test **FULL LIGHT**, **HALF DIM**, and **DAY TIME DIM**. Edit and save the 0–255 values if required.
+1. Install or update to `OverheadLink_v0.3.7_Windows_x64.exe`. Existing v0.3.6 installations can use **Updates → Check for Updates → Download and Install Update**.
+2. On **Connections**, right-click the existing electrical Mega, choose **Assign to… → ELEC**. Right-click the new dedicated hydraulic/fuel Mega and choose **Assign to… → HYD-FUEL**. Right-click unrelated SL3, Rowsfire, or MobiFlight ports and choose **Ignore this COM port**.
+3. The v0.3.7 migration creates a timestamp-safe backup of the existing profile, splits the previous combined board, and preserves unrelated learned corrections.
+4. The validated map loads automatically whenever an identified Mega comes online. Check that the profile indicator shows zero errors; the manual **Load All Online Maps** button remains available for troubleshooting.
+5. On **Backlighting**, test **FULL LIGHT**, **HALF DIM**, and **DAY TIME DIM**. Edit and save the 0–255 values if required.
+
+The HYD BLUE electric pump intentionally remains on the ELEC Mega until new dedicated HYD-FUEL pins are confirmed. The ELEC profile also records IDG 1 switch D6 and the BATTERY 2 display hardware allocation CLK=A2 / DIO=A3.
 
 ## Connect Fenix
 
@@ -28,6 +31,17 @@ After the application has run once, the **Firmware Files** button opens both emb
 2. OverheadLink connects automatically and keeps retrying if MSFS was not open when the app started. The status should report `MSFS 2024 + Fenix WASM bridge ready`.
 3. Operate one known switch and check **Live Debug** for `TRACE`, `FENIX SEND`, `FENIX FEEDBACK`, and `ANNUNCIATOR` entries.
 4. Test one panel at a time before loading the entire overhead.
+
+## Use the iPhone / device remote
+
+1. Open the new **Remote** tab in OverheadLink.
+2. Make sure the iPhone/iPad/Android device is on the same Wi-Fi or LAN as the cockpit PC.
+3. In Safari or another browser, enter the **Remote address** shown in OverheadLink.
+4. Enter the six-digit pairing code shown in the Remote tab. A fresh code is generated every time OverheadLink starts.
+5. The remote shows Fenix connection status, panel controls, and Korry upper/lower feedback where those outputs are mapped.
+6. On iPhone, choose **Share → Add to Home Screen** to launch the remote like an app.
+
+The remote listens only on the local network and rejects non-local clients. The simulator commands are still executed by the cockpit PC through the same OverheadLink Fenix bridge.
 
 ## Repair a mismatch
 
