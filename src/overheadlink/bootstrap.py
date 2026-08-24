@@ -10,7 +10,9 @@ from typing import Any
 
 
 PROFILE_FILENAME = "a320_fenix_overhead.json"
-MIGRATION_ID = "0.3.7-hydfuel-split"
+SPLIT_MIGRATION_ID = "0.3.7-hydfuel-split"
+PERIPHERAL_MIGRATION_ID = "0.3.8-tm1637-peripheral"
+BAT2_SIM_EXPRESSION = "(A:ELECTRICAL BATTERY VOLTAGE:2, Volts)"
 
 
 HYD_FUEL_PIN_MAP = {
@@ -44,7 +46,7 @@ HYD_FUEL_PIN_MAP = {
 }
 
 
-def _data_root() -> Path:
+def data_root() -> Path:
     if os.name == "nt":
         root = Path(os.environ.get("APPDATA", Path.home() / "AppData" / "Roaming")) / "OverheadLink"
     else:
@@ -53,24 +55,36 @@ def _data_root() -> Path:
     return root
 
 
-def _bundled_root() -> Path:
+def bundled_root() -> Path:
     if hasattr(sys, "_MEIPASS"):
         return Path(getattr(sys, "_MEIPASS"))
     return Path(__file__).resolve().parents[2]
 
 
 def writable_profile_path() -> Path:
-    target = _data_root() / "profiles" / PROFILE_FILENAME
+    target = data_root() / "profiles" / PROFILE_FILENAME
     target.parent.mkdir(parents=True, exist_ok=True)
     if not target.exists():
-        shutil.copy2(_bundled_root() / "profiles" / PROFILE_FILENAME, target)
+        shutil.copy2(bundled_root() / "profiles" / PROFILE_FILENAME, target)
     return target
 
 
-def _migration_applied(payload: dict[str, Any]) -> bool:
+def _has_migration(payload: dict[str, Any], migration_id: str) -> bool:
     return any(
-        isinstance(entry, dict) and entry.get("migration") == MIGRATION_ID
+        isinstance(entry, dict) and entry.get("migration") == migration_id
         for entry in payload.get("changeLog", [])
+    )
+
+
+def _append_migration(payload: dict[str, Any], migration_id: str, reason: str) -> None:
+    if _has_migration(payload, migration_id):
+        return
+    payload.setdefault("changeLog", []).append(
+        {
+            "timestampUtc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "reason": reason,
+            "migration": migration_id,
+        }
     )
 
 
@@ -103,42 +117,85 @@ def _battery2_display() -> dict[str, Any]:
         "clk": "A2",
         "dio": "A3",
         "status": "confirmed",
-        "sourceRevision": "User confirmed 2026-08-24",
-        "notes": "Hardware allocation retained by OverheadLink. CLK=A2, DIO=A3.",
+        "sourceRevision": "User confirmed 2026-08-24; driver added 0.3.8",
+        "simExpression": BAT2_SIM_EXPRESSION,
+        "brightness": 7,
+        "minimumValue": 10.0,
+        "maximumValue": 40.0,
+        "decimals": 1,
+        "notes": (
+            "ELEC Mega TM1637. CLK=A2, DIO=A3. Uses the documented MSFS battery-2 voltage SimVar; "
+            "implausible/unavailable values are shown as dashes rather than guessed."
+        ),
     }
 
 
-def _ensure_battery_display(payload: dict[str, Any]) -> bool:
-    boards = payload.get("boards", [])
-    elec = next((board for board in boards if isinstance(board, dict) and board.get("id") == "elec"), None)
-    if elec is None:
-        return False
+def _ensure_idg1(elec: dict[str, Any]) -> bool:
+    assignments = elec.setdefault("assignments", [])
+    existing = next(
+        (item for item in assignments if isinstance(item, dict) and item.get("id") == "elec.idg1.switch"),
+        None,
+    )
+    desired = _idg1_assignment()
+    if existing is None:
+        assignments.append(desired)
+        return True
+    changed = False
+    for key, value in desired.items():
+        if existing.get(key) != value:
+            existing[key] = value
+            changed = True
+    return changed
+
+
+def _ensure_battery_display(elec: dict[str, Any]) -> bool:
     peripherals = elec.setdefault("peripherals", [])
-    if any(isinstance(item, dict) and item.get("id") == "elec.bat2_voltage_display" for item in peripherals):
-        return False
-    peripherals.append(_battery2_display())
-    return True
+    existing = next(
+        (item for item in peripherals if isinstance(item, dict) and item.get("id") == "elec.bat2_voltage_display"),
+        None,
+    )
+    desired = _battery2_display()
+    if existing is None:
+        peripherals.append(desired)
+        return True
+    changed = False
+    for key, value in desired.items():
+        if existing.get(key) != value:
+            existing[key] = value
+            changed = True
+    return changed
+
+
+def _apply_hyd_map(hyd: dict[str, Any]) -> bool:
+    changed = False
+    for assignment in hyd.get("assignments", []):
+        if not isinstance(assignment, dict):
+            continue
+        assignment_id = str(assignment.get("id", ""))
+        pin = HYD_FUEL_PIN_MAP.get(assignment_id)
+        if pin and assignment.get("pin") != pin:
+            assignment["pin"] = pin
+            assignment["status"] = "revised"
+            assignment["sourceRevision"] = "Dedicated HYD/FUEL Mega confirmed 2026-08-24"
+            changed = True
+    return changed
 
 
 def migrate_profile(payload: dict[str, Any]) -> bool:
-    if _migration_applied(payload):
-        return _ensure_battery_display(payload)
-
     boards = payload.get("boards", [])
     if not isinstance(boards, list):
         raise ValueError("Profile boards must be a list")
+    changed = False
 
     combined_index = next(
         (index for index, board in enumerate(boards) if isinstance(board, dict) and board.get("id") == "elec-hyd-fuel"),
         None,
     )
-
     if combined_index is not None:
         combined = boards[combined_index]
         assignments = list(combined.get("assignments", []))
         elec_assignments: list[dict[str, Any]] = []
         hyd_assignments: list[dict[str, Any]] = []
-
         for assignment in assignments:
             if not isinstance(assignment, dict):
                 continue
@@ -148,23 +205,11 @@ def migrate_profile(payload: dict[str, Any]) -> bool:
             else:
                 elec_assignments.append(assignment)
 
-        for assignment in hyd_assignments:
-            assignment_id = str(assignment.get("id", ""))
-            pin = HYD_FUEL_PIN_MAP.get(assignment_id)
-            if pin:
-                assignment["pin"] = pin
-                assignment["status"] = "revised"
-                assignment["sourceRevision"] = "Dedicated HYD/FUEL Mega confirmed 2026-08-24"
-
-        if not any(item.get("id") == "elec.idg1.switch" for item in elec_assignments):
-            elec_assignments.append(_idg1_assignment())
-
         elec = dict(combined)
         elec["id"] = "elec"
         elec["name"] = "ELEC"
         elec["assignments"] = elec_assignments
         elec["peripherals"] = list(elec.get("peripherals", []))
-
         hyd = {
             "id": "hyd-fuel",
             "name": "HYD-FUEL",
@@ -174,102 +219,49 @@ def migrate_profile(payload: dict[str, Any]) -> bool:
             "assignments": hyd_assignments,
         }
         boards[combined_index : combined_index + 1] = [elec, hyd]
-    else:
-        elec = next((board for board in boards if isinstance(board, dict) and board.get("id") == "elec"), None)
-        hyd = next((board for board in boards if isinstance(board, dict) and board.get("id") == "hyd-fuel"), None)
-        if elec is not None:
-            assignments = elec.setdefault("assignments", [])
-            if not any(isinstance(item, dict) and item.get("id") == "elec.idg1.switch" for item in assignments):
-                assignments.append(_idg1_assignment())
-        if hyd is not None:
-            for assignment in hyd.get("assignments", []):
-                if not isinstance(assignment, dict):
-                    continue
-                assignment_id = str(assignment.get("id", ""))
-                if assignment_id in HYD_FUEL_PIN_MAP:
-                    assignment["pin"] = HYD_FUEL_PIN_MAP[assignment_id]
-                    assignment["status"] = "revised"
-                    assignment["sourceRevision"] = "Dedicated HYD/FUEL Mega confirmed 2026-08-24"
+        changed = True
+        _append_migration(
+            payload,
+            SPLIT_MIGRATION_ID,
+            "Split ELEC and HYD/FUEL Megas and apply the confirmed 2026-08-24 HYD/FUEL pin map",
+        )
 
-    _ensure_battery_display(payload)
-    payload.setdefault("changeLog", []).append(
-        {
-            "timestampUtc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-            "reason": "Split ELEC and HYD/FUEL Megas; apply confirmed 2026-08-24 pin map; add IDG1 D6 and BAT2 display A2/A3 metadata",
-            "migration": MIGRATION_ID,
-        }
-    )
-    return True
+    elec = next((board for board in boards if isinstance(board, dict) and board.get("id") == "elec"), None)
+    hyd = next((board for board in boards if isinstance(board, dict) and board.get("id") == "hyd-fuel"), None)
+    if hyd is not None:
+        changed = _apply_hyd_map(hyd) or changed
+    if elec is not None:
+        changed = _ensure_idg1(elec) or changed
+        changed = _ensure_battery_display(elec) or changed
+        if not _has_migration(payload, PERIPHERAL_MIGRATION_ID):
+            _append_migration(
+                payload,
+                PERIPHERAL_MIGRATION_ID,
+                "Add persistent TM1637 BATTERY 2 voltage display on ELEC A2/A3 and reserve its pins",
+            )
+            changed = True
+
+    return changed
 
 
 def _write_payload(path: Path, payload: dict[str, Any]) -> None:
     temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    temporary.replace(path)
+    try:
+        temporary.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        # Verify the complete JSON before replacing the live copy.
+        json.loads(temporary.read_text(encoding="utf-8"))
+        temporary.replace(path)
+    except Exception:
+        temporary.unlink(missing_ok=True)
+        raise
 
 
 def prepare_profile() -> Path:
     path = writable_profile_path()
     payload = json.loads(path.read_text(encoding="utf-8"))
-    changed = migrate_profile(payload)
-    if changed:
-        backup = path.with_name(path.stem + "_pre_0.3.7_backup" + path.suffix)
+    if migrate_profile(payload):
+        backup = path.with_name(path.stem + "_pre_0.3.8_backup" + path.suffix)
         if not backup.exists():
             shutil.copy2(path, backup)
         _write_payload(path, payload)
-    elif _ensure_battery_display(payload):
-        _write_payload(path, payload)
     return path
-
-
-def _preserve_peripherals_after_save(profile_store: Any) -> None:
-    original_save = profile_store.save
-
-    def preserving_save(profile: Any, reason: str = "Profile updated") -> Any:
-        backup = original_save(profile, reason)
-        try:
-            payload = json.loads(profile_store.path.read_text(encoding="utf-8"))
-            if _ensure_battery_display(payload):
-                _write_payload(profile_store.path, payload)
-        except (OSError, json.JSONDecodeError):
-            pass
-        return backup
-
-    profile_store.save = preserving_save
-
-
-def install_app_extensions(app_class: type) -> None:
-    if getattr(app_class, "_overheadlink_remote_installed", False):
-        return
-
-    original_init = app_class.__init__
-    original_close = app_class._close
-
-    def wrapped_init(self, *args: object, **kwargs: object) -> None:
-        original_init(self, *args, **kwargs)
-        _preserve_peripherals_after_save(self.profile_store)
-        try:
-            from .remote import RemotePanelServer, install_remote_tab
-
-            self.remote_panel_server = RemotePanelServer(self)
-            self.remote_panel_server.start()
-            install_remote_tab(self, self.remote_panel_server)
-            self._log(
-                f"REMOTE PANEL ready: {self.remote_panel_server.url} | pairing code {self.remote_panel_server.pairing_code}"
-            )
-        except Exception as error:
-            self.remote_panel_server = None
-            self._log(f"REMOTE PANEL failed to start: {error}")
-
-    def wrapped_close(self) -> None:
-        server = getattr(self, "remote_panel_server", None)
-        if server is not None:
-            try:
-                server.stop()
-            except Exception:
-                pass
-        original_close(self)
-
-    app_class.__init__ = wrapped_init
-    app_class._close = wrapped_close
-    app_class._overheadlink_remote_installed = True
