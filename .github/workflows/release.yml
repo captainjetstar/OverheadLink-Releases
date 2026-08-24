@@ -16,11 +16,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - uses: ilammy/msvc-dev-cmd@v1
 
       - name: Download embedded runtimes
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force vendor | Out-Null
+          python -m pip install pillow
           Invoke-WebRequest https://www.python.org/ftp/python/3.12.10/python-3.12.10-amd64.exe -OutFile vendor/python-3.12.10-amd64.exe
           python -m pip download pyserial==3.5 --no-deps --dest vendor
           python -m pip download SimConnect==0.4.26 --no-deps --dest vendor/simconnect-package
@@ -32,10 +34,10 @@ jobs:
       - name: Build native setup launcher
         shell: cmd
         run: |
-          python installer\generate_icon.py
-          rc /nologo /fo installer\overheadlink.res installer\bootstrap.rc
-          cl /nologo /O2 /W3 /DUNICODE /D_UNICODE /MT /Fo:installer\bootstrap.obj /c installer\bootstrap.c
-          link /nologo /SUBSYSTEM:WINDOWS /OUT:installer\OverheadLink_base.exe installer\bootstrap.obj installer\overheadlink.res bcrypt.lib shell32.lib ole32.lib comctl32.lib user32.lib gdi32.lib advapi32.lib
+          python installer\generate_icon.py || exit /b 1
+          rc /nologo /fo installer\overheadlink.res installer\bootstrap.rc || exit /b 1
+          cl /nologo /O2 /W3 /DUNICODE /D_UNICODE /MT /Fo:installer\bootstrap.obj /c installer\bootstrap.c || exit /b 1
+          link /nologo /SUBSYSTEM:WINDOWS /OUT:installer\OverheadLink_base.exe installer\bootstrap.obj installer\overheadlink.res bcrypt.lib shell32.lib ole32.lib comctl32.lib user32.lib gdi32.lib advapi32.lib || exit /b 1
 
       - name: Package one-file executable
         shell: pwsh
