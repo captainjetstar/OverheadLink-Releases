@@ -36,6 +36,10 @@ class VerificationStatus(StrEnum):
     SUPERSEDED = "superseded"
 
 
+class PeripheralType(StrEnum):
+    TM1637_4DIGIT = "tm1637_4digit"
+
+
 def pin_number(pin: str) -> int:
     pin = pin.strip().upper()
     if pin.startswith("D"):
@@ -162,12 +166,89 @@ class PinAssignment:
 
 
 @dataclass(slots=True)
+class HardwarePeripheral:
+    id: str
+    name: str
+    peripheral_type: PeripheralType
+    pins: dict[str, str]
+    status: VerificationStatus = VerificationStatus.NEEDS_VERIFICATION
+    source_revision: str = ""
+    notes: str = ""
+    sim_expression: str = ""
+    brightness: int = 7
+    minimum_value: float = 0.0
+    maximum_value: float = 40.0
+    decimals: int = 1
+
+    def __post_init__(self) -> None:
+        self.pins = {str(key).lower(): canonical_pin(value) for key, value in self.pins.items()}
+        if not 0 <= self.brightness <= 7:
+            raise ValueError(f"TM1637 brightness must be 0..7 for {self.id}")
+        if not 0 <= self.decimals <= 2:
+            raise ValueError(f"Display decimals must be 0..2 for {self.id}")
+        if self.maximum_value <= self.minimum_value:
+            raise ValueError(f"Invalid display range for {self.id}")
+
+    @property
+    def numeric_pins(self) -> dict[str, int]:
+        return {name: pin_number(pin) for name, pin in self.pins.items()}
+
+    @classmethod
+    def from_dict(cls, raw: dict[str, Any]) -> "HardwarePeripheral":
+        kind = PeripheralType(str(raw.get("type", "")))
+        pins = dict(raw.get("pins", {}))
+        if kind == PeripheralType.TM1637_4DIGIT:
+            if raw.get("clk") is not None:
+                pins.setdefault("clk", str(raw["clk"]))
+            if raw.get("dio") is not None:
+                pins.setdefault("dio", str(raw["dio"]))
+        return cls(
+            id=str(raw["id"]),
+            name=str(raw.get("name", raw["id"])),
+            peripheral_type=kind,
+            pins={str(key): str(value) for key, value in pins.items()},
+            status=VerificationStatus(raw.get("status", "needs_verification")),
+            source_revision=str(raw.get("sourceRevision", "")),
+            notes=str(raw.get("notes", "")),
+            sim_expression=str(raw.get("simExpression", "")),
+            brightness=int(raw.get("brightness", 7)),
+            minimum_value=float(raw.get("minimumValue", 0.0)),
+            maximum_value=float(raw.get("maximumValue", 40.0)),
+            decimals=int(raw.get("decimals", 1)),
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        result: dict[str, Any] = {
+            "id": self.id,
+            "type": self.peripheral_type.value,
+            "name": self.name,
+            "status": self.status.value,
+            "sourceRevision": self.source_revision,
+            "brightness": self.brightness,
+            "minimumValue": self.minimum_value,
+            "maximumValue": self.maximum_value,
+            "decimals": self.decimals,
+        }
+        if self.peripheral_type == PeripheralType.TM1637_4DIGIT:
+            result["clk"] = self.pins.get("clk", "")
+            result["dio"] = self.pins.get("dio", "")
+        else:
+            result["pins"] = dict(self.pins)
+        if self.sim_expression:
+            result["simExpression"] = self.sim_expression
+        if self.notes:
+            result["notes"] = self.notes
+        return result
+
+
+@dataclass(slots=True)
 class BoardProfile:
     id: str
     name: str
     kind: BoardKind
     optional: bool = False
     assignments: list[PinAssignment] = field(default_factory=list)
+    peripherals: list[HardwarePeripheral] = field(default_factory=list)
     expected_hardware: str = ""
 
     @classmethod
@@ -179,10 +260,11 @@ class BoardProfile:
             optional=bool(raw.get("optional", False)),
             expected_hardware=str(raw.get("expectedHardware", "")),
             assignments=[PinAssignment.from_dict(item) for item in raw.get("assignments", [])],
+            peripherals=[HardwarePeripheral.from_dict(item) for item in raw.get("peripherals", [])],
         )
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        result: dict[str, Any] = {
             "id": self.id,
             "name": self.name,
             "kind": self.kind.value,
@@ -190,9 +272,19 @@ class BoardProfile:
             "expectedHardware": self.expected_hardware,
             "assignments": [assignment.to_dict() for assignment in self.assignments],
         }
+        if self.peripherals:
+            result["peripherals"] = [peripheral.to_dict() for peripheral in self.peripherals]
+        return result
 
     def assignment(self, assignment_id: str) -> PinAssignment | None:
         return next((item for item in self.assignments if item.id == assignment_id), None)
+
+    def peripheral(self, peripheral_id: str) -> HardwarePeripheral | None:
+        return next((item for item in self.peripherals if item.id == peripheral_id), None)
+
+    @property
+    def reserved_pins(self) -> set[str]:
+        return {pin for peripheral in self.peripherals for pin in peripheral.pins.values()}
 
 
 @dataclass(slots=True)
@@ -230,4 +322,3 @@ class OverheadProfile:
 
     def board(self, board_id: str) -> BoardProfile | None:
         return next((board for board in self.boards if board.id == board_id), None)
-
