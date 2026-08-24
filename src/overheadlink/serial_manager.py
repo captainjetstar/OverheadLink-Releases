@@ -72,7 +72,6 @@ class SerialConnection:
         self.running = True
         self._thread = threading.Thread(target=self._run, name=f"OverheadLink-{self.port}", daemon=True)
         self._thread.start()
-        # Most Arduino boards reset when the serial port opens.
         sleep(0.25)
         self.send(encode_message("HELLO"))
 
@@ -113,8 +112,6 @@ class SerialConnection:
             return
         self._rx.extend(chunk)
         if len(self._rx) > MAX_RX_BUFFER:
-            # A valid firmware line is tiny. Drop an unbounded/no-newline stream
-            # rather than allowing a bad serial device to grow memory forever.
             self._rx.clear()
             self.last_error = "Receive buffer overflow; malformed serial stream discarded"
             return
@@ -125,8 +122,8 @@ class SerialConnection:
             position = min(newline_positions)
             raw = bytes(self._rx[:position]).strip()
             del self._rx[: position + 1]
-            while self._rx[:1] in {b"\n", b"\r"}:
-                del self._rx[:1]
+            while self._rx and self._rx[0] in (10, 13):
+                del self._rx[0]
             if not raw:
                 continue
             try:
@@ -199,8 +196,6 @@ class BoardManager:
                 existing = self.boards_by_port.get(port)
                 if existing and existing.connection and existing.connection.running:
                     continue
-                # Preserve the last known identity while a failed serial link is
-                # being reopened; it is replaced by the next IDENT packet.
                 board = existing or ConnectedBoard(port=port)
                 connection = SerialConnection(port, self._handle_message)
                 board.connection = connection
