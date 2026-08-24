@@ -28,15 +28,16 @@ class InstallerV039Tests(unittest.TestCase):
     def test_versions_are_aligned(self) -> None:
         with (PROJECT / "pyproject.toml").open("rb") as handle:
             project_version = str(tomllib.load(handle)["project"]["version"])
-        self.assertEqual(project_version, "0.3.9")
         self.assertEqual(__version__, project_version)
 
     def test_generated_installer_uses_project_version_and_forces_external_update_payload(self) -> None:
+        with (PROJECT / "pyproject.toml").open("rb") as handle:
+            project_version = str(tomllib.load(handle)["project"]["version"])
         module = load_bootstrap_generator()
         source = (PROJECT / "installer" / "bootstrap.c").read_text(encoding="utf-8")
-        generated = module.build_source(source, "0.3.9")
-        self.assertIn('#define APP_VERSION L"0.3.9"', generated)
-        self.assertIn('#define APP_VERSION_A "0.3.9"', generated)
+        generated = module.build_source(source, project_version)
+        self.assertIn(f'#define APP_VERSION L"{project_version}"', generated)
+        self.assertIn(f'#define APP_VERSION_A "{project_version}"', generated)
         self.assertIn("strlen(APP_VERSION_A)", generated)
         self.assertIn('static const char value[] = APP_VERSION_A "\\r\\n";', generated)
         self.assertNotIn('APP_VERSION_A "\r\n";', generated)
