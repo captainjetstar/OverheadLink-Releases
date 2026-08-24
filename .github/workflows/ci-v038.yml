@@ -3,6 +3,8 @@ name: Validate OverheadLink v0.3.8
 on:
   push:
     branches: [overheadlink-0.3.8-tm1637-cleanup]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
