@@ -1,3 +1,34 @@
+# OverheadLink v0.3.8 TM1637 + reliability cleanup
+
+## New in v0.3.8
+
+- Added native **TM1637 4-digit display support** to the OverheadLink Mega firmware.
+- The ELEC Mega BATTERY 2 voltage display is configured as **CLK=A2 / DIO=A3** and those pins are now reserved so they cannot be accidentally reassigned to a Korry or potentiometer.
+- The display receives live battery-2 voltage through the OverheadLink Fenix/MSFS bridge, formats it to one decimal place (for example `28.1`), and shows `----` when the source is unavailable or implausible instead of inventing a value.
+- Mega firmware is now **v0.3.0**. The ELEC Mega must be flashed with the new firmware before the TM1637 display can operate; older Mega firmware continues to run normal mapped controls but OverheadLink will report that the display driver is unavailable.
+- Hardware peripherals are now first-class profile objects, so display configuration survives normal pin edits, backups, migrations, and restarts.
+
+## Reliability fixes in v0.3.8
+
+- Fixed a Fenix reconnect bug where OverheadLink could remain stuck at `MSFS connected` after a WASM registration timeout and stop automatic retries. It now keeps retrying until the Fenix/WASM bridge is actually ready.
+- Fixed the v0.3.7 profile-migration edge case that could restore BAT 2 display metadata only in memory without writing it back to disk.
+- Profile writes are now validated and written atomically; failed writes no longer leave the in-memory profile half-mutated.
+- Added rollback protection for pin moves, output swaps, and Fenix-action edits when validation or saving fails.
+- Added explicit protection for D0/D1 and peripheral-reserved pins during automatic and manual pin reassignment.
+- USB serial receive handling now preserves partial packets across timeouts, caps malformed receive buffers, records port errors, and closes reader threads cleanly on reconnect/shutdown.
+- Duplicate online panel identities no longer resolve arbitrarily to one COM port; OverheadLink blocks the ambiguous assignment and reports the conflict.
+- Learning modes are explicitly stopped after successful or failed repair operations so a failed save does not leave Megas scanning indefinitely.
+- Tightened OverheadLink serial protocol validation for malformed message types, separators, NULs, oversized messages, and invalid checksums.
+- Improved updater version comparison and truncated-update checks.
+- Unified the packaged launcher and installed command so both use the same migration, remote-panel, reconnect, and peripheral runtime.
+- Added dedicated v0.3.8 regression tests and an Arduino Mega firmware compile gate before merge.
+
+## Verification
+
+- Full Python regression suite: **44 tests passing** before merge.
+- The v0.3.8 CI also compiles the current Mega firmware for `arduino:avr:mega` before release approval.
+- Physical bench verification is still required for the actual TM1637 module, Fenix battery-voltage value, and installed cockpit wiring.
+
 # OverheadLink v0.3.7 HYD/FUEL split + device remote
 
 ## New in v0.3.7
