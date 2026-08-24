@@ -39,8 +39,8 @@ def build_source(source: str, version: str) -> str:
         count=1,
     )
     source = re.sub(
-        r'L"Local\\\\OverheadLink-Setup-v[0-9]+\.[0-9]+\.[0-9]+"',
-        'L"Local\\\\OverheadLink-Setup"',
+        r'OverheadLink-Setup-v[0-9]+\.[0-9]+\.[0-9]+',
+        'OverheadLink-Setup',
         source,
         count=1,
     )
@@ -77,11 +77,13 @@ def build_source(source: str, version: str) -> str:
         f'#define APP_VERSION L"{version}"',
         f'#define APP_VERSION_A "{version}"',
         "!launched_from_external_installer && marker_matches(payload_marker)",
-        'L"Local\\\\OverheadLink-Setup"',
+        "OverheadLink-Setup",
     ]
     missing = [token for token in required if token not in source]
     if missing:
         raise RuntimeError(f"generated bootstrap is missing: {missing}")
+    if "OverheadLink-Setup-v" in source:
+        raise RuntimeError("generated bootstrap still contains a versioned setup mutex")
     return source
 
 
