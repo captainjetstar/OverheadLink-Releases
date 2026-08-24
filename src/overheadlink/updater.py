@@ -8,6 +8,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 from typing import Callable
+from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 
@@ -15,6 +16,7 @@ REPOSITORY = "captainjetstar/OverheadLink-Releases"
 LATEST_RELEASE_API = f"https://api.github.com/repos/{REPOSITORY}/releases/latest"
 USER_AGENT = "OverheadLink-Updater"
 DOWNLOAD_CHUNK_SIZE = 1024 * 256
+ALLOWED_DOWNLOAD_HOSTS = {"github.com", "objects.githubusercontent.com", "release-assets.githubusercontent.com"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,11 +36,21 @@ def version_tuple(version: str) -> tuple[int, ...]:
     parts = core.split(".")
     if not parts or any(not part.isdigit() for part in parts):
         raise ValueError(f"Unsupported version: {version}")
-    return tuple(int(part) for part in parts)
+    values = [int(part) for part in parts]
+    while len(values) > 1 and values[-1] == 0:
+        values.pop()
+    return tuple(values)
+
+
+def _compare_versions(left: tuple[int, ...], right: tuple[int, ...]) -> int:
+    width = max(len(left), len(right))
+    padded_left = left + (0,) * (width - len(left))
+    padded_right = right + (0,) * (width - len(right))
+    return (padded_left > padded_right) - (padded_left < padded_right)
 
 
 def is_newer(candidate: str, installed: str) -> bool:
-    return version_tuple(candidate) > version_tuple(installed)
+    return _compare_versions(version_tuple(candidate), version_tuple(installed)) > 0
 
 
 def _open_url(url: str):
@@ -51,6 +63,13 @@ def _open_url(url: str):
         },
     )
     return urlopen(request, timeout=30)
+
+
+def _validate_asset_url(url: str) -> str:
+    parsed = urlparse(url)
+    if parsed.scheme != "https" or not parsed.hostname or parsed.hostname.lower() not in ALLOWED_DOWNLOAD_HOSTS:
+        raise RuntimeError("GitHub release contains an unexpected download URL")
+    return url
 
 
 def latest_release() -> UpdateInfo:
@@ -68,14 +87,14 @@ def latest_release() -> UpdateInfo:
     return UpdateInfo(
         version=version,
         notes=str(release.get("body") or "No release notes supplied."),
-        executable_url=executable_url,
-        checksum_url=checksum_url,
+        executable_url=_validate_asset_url(executable_url),
+        checksum_url=_validate_asset_url(checksum_url),
         release_url=str(release.get("html_url") or ""),
     )
 
 
 def _read_expected_checksum(url: str) -> str:
-    with _open_url(url) as response:
+    with _open_url(_validate_asset_url(url)) as response:
         text = response.read(4096).decode("ascii", errors="strict").strip()
     checksum = text.split()[0].lower() if text else ""
     if len(checksum) != 64 or any(character not in "0123456789abcdef" for character in checksum):
@@ -96,7 +115,7 @@ def download_update(
     digest = hashlib.sha256()
     received = 0
     try:
-        with _open_url(update.executable_url) as response, partial.open("wb") as output:
+        with _open_url(_validate_asset_url(update.executable_url)) as response, partial.open("wb") as output:
             total = int(response.headers.get("Content-Length", "0") or 0)
             while True:
                 chunk = response.read(DOWNLOAD_CHUNK_SIZE)
@@ -107,11 +126,15 @@ def download_update(
                 received += len(chunk)
                 if progress:
                     progress(received, total)
+        if received < 32:
+            raise RuntimeError("The downloaded update is unexpectedly small")
         if digest.hexdigest().lower() != expected:
             raise RuntimeError("The downloaded update failed its SHA-256 safety check")
         with partial.open("rb") as executable:
             if executable.read(2) != b"MZ":
                 raise RuntimeError("The downloaded update is not a Windows executable")
+            if partial.stat().st_size < 16:
+                raise RuntimeError("The downloaded update is truncated")
             executable.seek(-16, os.SEEK_END)
             if executable.read(8) != b"OHLNK03!":
                 raise RuntimeError("The downloaded update is missing the OverheadLink package signature")
@@ -125,4 +148,7 @@ def download_update(
 def launch_update(path: Path) -> None:
     if os.name != "nt":
         raise OSError("OverheadLink updates can only be installed automatically on Windows")
+    path = path.resolve()
+    if not path.is_file() or path.suffix.lower() != ".exe":
+        raise OSError("The verified OverheadLink update executable is missing")
     subprocess.Popen([str(path)], cwd=str(path.parent), close_fds=True)
