@@ -34,11 +34,21 @@ def version_tuple(version: str) -> tuple[int, ...]:
     parts = core.split(".")
     if not parts or any(not part.isdigit() for part in parts):
         raise ValueError(f"Unsupported version: {version}")
-    return tuple(int(part) for part in parts)
+    values = [int(part) for part in parts]
+    while len(values) > 1 and values[-1] == 0:
+        values.pop()
+    return tuple(values)
+
+
+def _compare_versions(left: tuple[int, ...], right: tuple[int, ...]) -> int:
+    width = max(len(left), len(right))
+    padded_left = left + (0,) * (width - len(left))
+    padded_right = right + (0,) * (width - len(right))
+    return (padded_left > padded_right) - (padded_left < padded_right)
 
 
 def is_newer(candidate: str, installed: str) -> bool:
-    return version_tuple(candidate) > version_tuple(installed)
+    return _compare_versions(version_tuple(candidate), version_tuple(installed)) > 0
 
 
 def _open_url(url: str):
@@ -107,11 +117,15 @@ def download_update(
                 received += len(chunk)
                 if progress:
                     progress(received, total)
+        if received < 32:
+            raise RuntimeError("The downloaded update is unexpectedly small")
         if digest.hexdigest().lower() != expected:
             raise RuntimeError("The downloaded update failed its SHA-256 safety check")
         with partial.open("rb") as executable:
             if executable.read(2) != b"MZ":
                 raise RuntimeError("The downloaded update is not a Windows executable")
+            if partial.stat().st_size < 16:
+                raise RuntimeError("The downloaded update is truncated")
             executable.seek(-16, os.SEEK_END)
             if executable.read(8) != b"OHLNK03!":
                 raise RuntimeError("The downloaded update is missing the OverheadLink package signature")
@@ -125,4 +139,7 @@ def download_update(
 def launch_update(path: Path) -> None:
     if os.name != "nt":
         raise OSError("OverheadLink updates can only be installed automatically on Windows")
+    path = path.resolve()
+    if not path.is_file() or path.suffix.lower() != ".exe":
+        raise OSError("The verified OverheadLink update executable is missing")
     subprocess.Popen([str(path)], cwd=str(path.parent), close_fds=True)

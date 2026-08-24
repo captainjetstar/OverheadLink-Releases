@@ -9,7 +9,7 @@
 
 ## Flash the controllers
 
-1. Flash `firmware\OverheadLinkMega\OverheadLinkMega.ino` to each Mega that OverheadLink will own.
+1. Flash the current `firmware\OverheadLinkMega\OverheadLinkMega.ino` to each Mega that OverheadLink will own. **v0.3.8 requires Mega firmware v0.3.0 or newer on the ELEC Mega for the BAT 2 TM1637 display.**
 2. Flash `firmware\OverheadLinkBacklightNano\OverheadLinkBacklightNano.ino` to the backlight Nano. Install the Adafruit NeoPixel library first.
 3. Power-cycle the boards. Mega pins remain high-impedance until a validated map is loaded. The Nano should immediately illuminate on its last saved preset.
 
@@ -17,37 +17,50 @@ After the application has run once, the **Firmware Files** button opens both emb
 
 ## Start the desktop app
 
-1. Install or update to `OverheadLink_v0.3.7_Windows_x64.exe`. Existing v0.3.6 installations can use **Updates → Check for Updates → Download and Install Update**.
+1. Install or update to `OverheadLink_v0.3.8_Windows_x64.exe`. Existing installations can use **Updates → Check for Updates → Download and Install Update**.
 2. On **Connections**, right-click the existing electrical Mega, choose **Assign to… → ELEC**. Right-click the new dedicated hydraulic/fuel Mega and choose **Assign to… → HYD-FUEL**. Right-click unrelated SL3, Rowsfire, or MobiFlight ports and choose **Ignore this COM port**.
-3. The v0.3.7 migration creates a timestamp-safe backup of the existing profile, splits the previous combined board, and preserves unrelated learned corrections.
+3. The migration creates a pre-v0.3.8 backup of the active profile before applying any required split/peripheral changes. Unrelated learned corrections are preserved.
 4. The validated map loads automatically whenever an identified Mega comes online. Check that the profile indicator shows zero errors; the manual **Load All Online Maps** button remains available for troubleshooting.
 5. On **Backlighting**, test **FULL LIGHT**, **HALF DIM**, and **DAY TIME DIM**. Edit and save the 0–255 values if required.
 
-The HYD BLUE electric pump intentionally remains on the ELEC Mega until new dedicated HYD-FUEL pins are confirmed. The ELEC profile also records IDG 1 switch D6 and the BATTERY 2 display hardware allocation CLK=A2 / DIO=A3.
+The HYD BLUE electric pump intentionally remains on the ELEC Mega until new dedicated HYD-FUEL pins are confirmed. No pins are guessed.
+
+## BATTERY 2 TM1637 voltage display
+
+- Board: **ELEC Mega**.
+- **CLK = A2**.
+- **DIO = A3**.
+- A2 and A3 are reserved by the profile and cannot be reassigned to normal controls while the display is configured.
+- OverheadLink sends the battery-2 voltage to the display automatically when the Fenix/MSFS bridge is ready.
+- A normal value is shown to one decimal place, such as `28.1`.
+- `----` means the simulator source is unavailable, not plausible, or the display is waiting for valid data.
+- If Live Debug reports `TM1637 DRIVER UNAVAILABLE`, flash the current Mega firmware to the ELEC Mega and reconnect it.
 
 ## Connect Fenix
 
 1. Start MSFS 2024, load the Fenix A320, and wait until the cockpit is fully loaded.
-2. OverheadLink connects automatically and keeps retrying if MSFS was not open when the app started. The status should report `MSFS 2024 + Fenix WASM bridge ready`.
+2. OverheadLink connects automatically and keeps retrying until the Fenix/WASM bridge is ready. The status should report `MSFS 2024 + Fenix WASM bridge ready`.
 3. Operate one known switch and check **Live Debug** for `TRACE`, `FENIX SEND`, `FENIX FEEDBACK`, and `ANNUNCIATOR` entries.
 4. Test one panel at a time before loading the entire overhead.
 
 ## Use the iPhone / device remote
 
-1. Open the new **Remote** tab in OverheadLink.
+1. Open the **Remote** tab in OverheadLink.
 2. Make sure the iPhone/iPad/Android device is on the same Wi-Fi or LAN as the cockpit PC.
 3. In Safari or another browser, enter the **Remote address** shown in OverheadLink.
 4. Enter the six-digit pairing code shown in the Remote tab. A fresh code is generated every time OverheadLink starts.
 5. The remote shows Fenix connection status, panel controls, and Korry upper/lower feedback where those outputs are mapped.
 6. On iPhone, choose **Share → Add to Home Screen** to launch the remote like an app.
 
-The remote listens only on the local network and rejects non-local clients. The simulator commands are still executed by the cockpit PC through the same OverheadLink Fenix bridge.
+The remote listens only on the local network and rejects non-local clients. Simulator commands are still executed by the cockpit PC through the same OverheadLink Fenix bridge.
 
 ## Repair a mismatch
 
 - Switch/selector: select it, click **Find Correct Pin**, and operate it twice.
 - Potentiometer: select it, click **Find Correct Pin**, move it through full travel twice, then click **Finish Analogue Scan**.
 - Korry legend: select that upper/lower output and click **Find Correct Output Pin**. Confirm the lamp visually as the app pulses only validated output pins.
+
+The v0.3.8 validator blocks D0/D1, duplicate active pins, and peripheral-reserved pins such as ELEC A2/A3. Failed saves are rolled back instead of leaving a partial mapping in memory.
 
 ## Map a Fenix action
 
@@ -58,4 +71,4 @@ The remote listens only on the local network and rejects non-local clients. The 
 
 The catalogue includes 488 Fenix A320 overhead presets: 301 digital inputs, 7 potentiometer inputs, and 180 output expressions. It does not occupy or invent physical pins; your supplied Mega map remains separate.
 
-Accepted corrections are saved to the active profile with a timestamped backup and change-log entry. Use **Export Log** if a simulator command, LVar, board identity, or physical pin still disagrees.
+Accepted corrections are saved to the active profile with a timestamped backup and change-log entry. Use **Export Log** if a simulator command, LVar, board identity, physical pin, or TM1637 display still disagrees.

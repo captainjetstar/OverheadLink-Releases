@@ -28,8 +28,21 @@ jobs:
           python -m pip download SimConnect==0.4.26 --no-deps --dest vendor/simconnect-package
           python -c "import pathlib,zipfile; wheel=next(pathlib.Path('vendor/simconnect-package').glob('*.whl')); z=zipfile.ZipFile(wheel); member=next(n for n in z.namelist() if n.endswith('/SimConnect.dll')); pathlib.Path('vendor/SimConnect.dll').write_bytes(z.read(member))"
 
+      - name: Compile Python sources
+        run: python -m compileall -q src tests run_overheadlink.py
+
       - name: Test
         run: python -m unittest discover -s tests -v
+
+      - uses: arduino/setup-arduino-cli@v2
+      - name: Install Arduino AVR core
+        shell: pwsh
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install arduino:avr
+
+      - name: Compile Mega firmware
+        run: arduino-cli compile --fqbn arduino:avr:mega firmware/OverheadLinkMega
 
       - name: Build native setup launcher
         shell: cmd
