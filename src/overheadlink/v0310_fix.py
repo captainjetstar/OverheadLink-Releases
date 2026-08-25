@@ -7,6 +7,7 @@ import shutil
 from typing import Any
 
 from .bootstrap import writable_profile_path
+from .v0312_pinmap import ensure_20260825_pinmap
 
 
 ADIRS_BOARD_ID = "left-adirs-gpws-call-oxy"
@@ -21,15 +22,16 @@ def _has_migration(payload: dict[str, Any]) -> bool:
 
 
 def ensure_adirs_required(path: Path | None = None) -> bool:
-    """Make the physical ADIRS/CALL/GPWS Mega a required controller.
+    """Apply current post-bootstrap migrations and keep ADIRS required.
 
-    v0.3.9 already migrates the legacy combined ELEC/HYD/FUEL board into
-    separate ELEC and HYD-FUEL profiles. The remaining count mismatch came
-    from the ADIRS/CALL/GPWS board still being marked optional in the seed
-    profile. This migration is deliberately narrow and preserves every pin,
-    mapping and learned correction.
+    v0.3.9 migrates the legacy combined ELEC/HYD/FUEL board into separate
+    ELEC and HYD-FUEL profiles. v0.3.12 then applies the later 2026-08-25
+    dedicated HYD/FUEL rewiring. The ADIRS/CALL/GPWS board remains a required
+    physical controller. Existing learned corrections are otherwise preserved.
     """
     target = path or writable_profile_path()
+    pinmap_changed = ensure_20260825_pinmap(target)
+
     payload = json.loads(target.read_text(encoding="utf-8"))
     boards = payload.get("boards", [])
     if not isinstance(boards, list):
@@ -44,11 +46,11 @@ def ensure_adirs_required(path: Path | None = None) -> bool:
         None,
     )
     if adirs is None:
-        return False
+        return pinmap_changed
 
     changed = adirs.get("optional") is not False
     if not changed and _has_migration(payload):
-        return False
+        return pinmap_changed
 
     if changed:
         adirs["optional"] = False
@@ -64,7 +66,7 @@ def ensure_adirs_required(path: Path | None = None) -> bool:
         changed = True
 
     if not changed:
-        return False
+        return pinmap_changed
 
     backup = target.with_name(target.stem + "_pre_0.3.10_backup" + target.suffix)
     if not backup.exists():
