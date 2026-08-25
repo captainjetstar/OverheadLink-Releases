@@ -46,14 +46,26 @@ jobs:
         run: python -m unittest discover -s tests -v
 
       - uses: arduino/setup-arduino-cli@v2
-      - name: Install Arduino AVR core
+      - name: Install Arduino AVR core and firmware libraries
         shell: pwsh
         run: |
           arduino-cli core update-index
           arduino-cli core install arduino:avr
+          arduino-cli lib install "Adafruit NeoPixel"
 
-      - name: Compile Mega firmware
-        run: arduino-cli compile --fqbn arduino:avr:mega firmware/OverheadLinkMega
+      - name: Build bundled controller firmware and flasher
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force firmware/precompiled/mega | Out-Null
+          New-Item -ItemType Directory -Force firmware/precompiled/nano | Out-Null
+          arduino-cli compile --fqbn arduino:avr:mega --output-dir firmware/precompiled/mega firmware/OverheadLinkMega
+          arduino-cli compile --fqbn arduino:avr:nano:cpu=atmega328old --output-dir firmware/precompiled/nano firmware/OverheadLinkBacklightNano
+          $AvrRoot = Get-ChildItem "$env:LOCALAPPDATA/Arduino15/packages/arduino/tools/avrdude" -Directory | Sort-Object Name | Select-Object -Last 1
+          if (-not $AvrRoot) { throw "Arduino avrdude tool was not installed" }
+          New-Item -ItemType Directory -Force vendor/avrdude | Out-Null
+          Copy-Item "$($AvrRoot.FullName)/*" vendor/avrdude -Recurse -Force
+          if (-not (Test-Path vendor/avrdude/bin/avrdude.exe)) { throw "Bundled avrdude.exe was not found after copy" }
+          if (-not (Test-Path vendor/avrdude/etc/avrdude.conf)) { throw "Bundled avrdude.conf was not found after copy" }
 
       - name: Build native setup launcher
         shell: cmd
@@ -85,5 +97,5 @@ jobs:
           if (gh release view $Tag 2>$null) {
             gh release upload $Tag $env:ASSET "$env:ASSET.sha256" --clobber
           } else {
-            gh release create $Tag $env:ASSET "$env:ASSET.sha256" --title "OverheadLink $Tag" --notes-file RELEASE_NOTES_0310.md --latest
+            gh release create $Tag $env:ASSET "$env:ASSET.sha256" --title "OverheadLink $Tag" --notes-file RELEASE_NOTES_0311.md --latest
           }
