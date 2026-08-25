@@ -62,14 +62,17 @@ class V0310RequiredBoardTests(unittest.TestCase):
     def test_v0310_version_alignment(self) -> None:
         with (PROJECT / "pyproject.toml").open("rb") as handle:
             project_version = str(tomllib.load(handle)["project"]["version"])
-        self.assertEqual(project_version, "0.3.10")
         self.assertEqual(__version__, project_version)
+        current = tuple(int(part) for part in project_version.split("."))
+        self.assertGreaterEqual(current, (0, 3, 10))
 
-    def test_packaged_launcher_runs_required_board_migration(self) -> None:
-        source = (PROJECT / "run_overheadlink.py").read_text(encoding="utf-8")
-        self.assertIn("prepare_profile()", source)
-        self.assertIn("ensure_adirs_required()", source)
-        self.assertLess(source.index("prepare_profile()"), source.index("ensure_adirs_required()"))
+    def test_packaged_launcher_still_runs_required_board_migration(self) -> None:
+        launcher = (PROJECT / "run_overheadlink.py").read_text(encoding="utf-8")
+        firmware_ui = (PROJECT / "src" / "overheadlink" / "firmware_ui.py").read_text(encoding="utf-8")
+        self.assertIn("overheadlink.firmware_ui import main", launcher)
+        self.assertIn("prepare_profile()", firmware_ui)
+        self.assertIn("ensure_adirs_required()", firmware_ui)
+        self.assertLess(firmware_ui.index("prepare_profile()"), firmware_ui.index("ensure_adirs_required()"))
 
 
 if __name__ == "__main__":
