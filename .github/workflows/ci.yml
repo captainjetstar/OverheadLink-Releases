@@ -30,9 +30,12 @@ jobs:
       - name: Run unit tests
         run: python -m unittest discover -s tests -v
       - uses: arduino/setup-arduino-cli@v2
-      - name: Install Arduino AVR core
+      - name: Install Arduino AVR core and firmware libraries
         run: |
           arduino-cli core update-index
           arduino-cli core install arduino:avr
-      - name: Compile Mega firmware
-        run: arduino-cli compile --fqbn arduino:avr:mega firmware/OverheadLinkMega
+          arduino-cli lib install "Adafruit NeoPixel"
+      - name: Compile controller firmware
+        run: |
+          arduino-cli compile --fqbn arduino:avr:mega firmware/OverheadLinkMega
+          arduino-cli compile --fqbn arduino:avr:nano:cpu=atmega328old firmware/OverheadLinkBacklightNano
