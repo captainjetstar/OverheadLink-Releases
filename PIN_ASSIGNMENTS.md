@@ -1,8 +1,21 @@
 # OverheadLink current pin assignments
 
-This file records the **current user-confirmed rewiring that differs from the original seed profile**. The live OverheadLink profile after migration is the machine-readable source of truth for every enabled assignment. Do not use the old combined ELEC/HYD/FUEL map from earlier releases.
+This file records the **latest user-confirmed physical wiring** used by OverheadLink. Newer dated corrections override earlier seed-profile assignments.
 
-## Dedicated HYD-FUEL Mega
+## Controller layout — confirmed 2026-08-25
+
+The overhead uses separate controller profiles for these panels:
+
+- **ELEC** — dedicated Mega 2560
+- **HYD/FUEL** — dedicated Mega 2560
+- **AIR CON** — dedicated Mega 2560
+- **EXT LIGHTS** — dedicated Mega 2560
+
+Do **not** use the temporary combined ELEC + HYD/FUEL arrangement from the earlier 2026-08-25 troubleshooting/rework stage.
+
+## Dedicated HYD/FUEL Mega — current
+
+### Fuel tank pumps retained from the dedicated-board split
 
 | Control | LED 1 | LED 2 | Switch |
 |---|---:|---:|---:|
@@ -12,17 +25,24 @@ This file records the **current user-confirmed rewiring that differs from the or
 | CENTRE TANK PUMP 2 | D14 | D15 | D2 |
 | RIGHT TANK PUMP 1 | D16 | D17 | D18 |
 | RIGHT TANK PUMP 2 | D19 | D20 | D21 |
+
+### Latest 2026-08-25 HYD/FUEL rewiring
+
+| Control | LED 1 | LED 2 | Switch |
+|---|---:|---:|---:|
 | ENG 2 HYD PUMP | D22 | D23 | D25 |
-| X FEED | D26 | D28 | D27 |
-| ENG 1 HYD PUMP | D31 | D33 | D30 |
+| FUEL X FEED / XFER | D43 | D42 | D38 |
+| ENG 1 HYD PUMP | D48 | D49 | D45 |
+| BLUE / ELEC PUMP | D35 | D33 | **UNASSIGNED** |
+| ENG ELEC PUMP | A6 | A7 | A5 |
 
-All 27 assigned HYD/FUEL pins above are unique. D0/D1 remain reserved for Mega USB serial.
+The BLUE / ELEC PUMP switch remains intentionally unassigned until a physical switch pin is supplied. OverheadLink disables the old switch pin instead of guessing a replacement.
 
-### HYD BLUE electrical pump
+The `ENG ELEC PUMP` A6/A7/A5 mapping is stored exactly as dictated. Its Fenix action remains unverified in the automatic profile migration so the app does not guess which simulator action corresponds to that physical label.
 
-The HYD BLUE electrical pump **has not yet been assigned new pins on the dedicated HYD-FUEL Mega**. Its existing mapping remains on the ELEC profile until the new physical pins are confirmed. OverheadLink must not guess or auto-move it.
+## ELEC Mega
 
-## ELEC Mega — latest additions
+ELEC remains a **separate Mega** from HYD/FUEL. Existing confirmed ELEC assignments remain on the ELEC profile.
 
 | Device | Assignment |
 |---|---|
@@ -30,15 +50,21 @@ The HYD BLUE electrical pump **has not yet been assigned new pins on the dedicat
 | BATTERY 2 voltage display CLK | A2 |
 | BATTERY 2 voltage display DIO | A3 |
 
-The BATTERY 2 display is a `tm1637_4digit` peripheral in v0.3.8. A2 and A3 are reserved by the profile and by Mega firmware v0.3.0 while that peripheral is configured.
+The earlier temporary combined-board voltage-readout reassignment is not applied to the separated controller layout.
 
-## Other panels
+## AIR CON Mega
 
-AIR-COND, EXT-LIGHT-OVERHEAD, ADIRS/left-side, APU, and backlighting mappings are retained from the active OverheadLink profile and any accepted in-app corrections. For those panels, use **Assign Pins** in OverheadLink rather than an older static Markdown snapshot; every accepted correction is persisted to the active profile with a backup and change-log entry.
+AIR CON remains a separate dedicated Mega. Its existing accepted pin assignments and in-app corrections are retained.
+
+## EXT LIGHTS Mega
+
+EXT LIGHTS remains a separate dedicated Mega. Its existing accepted pin assignments and in-app corrections are retained.
 
 ## Source-of-truth rule
 
-1. Current physical user-confirmed rewiring overrides an older seed assignment.
-2. The migrated active OverheadLink JSON profile is authoritative for software execution.
-3. D0/D1 and declared peripheral pins are unavailable for ordinary pin assignment.
-4. Never fill an unconfirmed physical pin merely to make a sequence look complete.
+1. The latest dated user-confirmed physical rewiring overrides older seed assignments.
+2. ELEC, HYD/FUEL, AIR CON, and EXT LIGHTS are separate controller profiles.
+3. The migrated active OverheadLink JSON profile is authoritative for software execution.
+4. D0/D1 remain reserved for Mega USB serial.
+5. Declared peripheral pins remain unavailable for ordinary pin assignment.
+6. Never invent an unconfirmed physical pin merely to make a sequence complete.
