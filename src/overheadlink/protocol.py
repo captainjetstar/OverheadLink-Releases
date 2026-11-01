@@ -60,3 +60,4 @@ def parse_message(line: str | bytes) -> ProtocolMessage:
     if not message_type:
         raise ValueError("Missing protocol message type")
     return ProtocolMessage(message_type, tuple(fields[2:-1]), line)
+

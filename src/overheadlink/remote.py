@@ -291,3 +291,4 @@ def install_remote_tab(app: Any, server: RemotePanelServer) -> None:
         wraplength=780,
     ).grid(row=5, column=0, columnspan=2, sticky="w", pady=(18, 0))
     card.columnconfigure(1, weight=1)
+

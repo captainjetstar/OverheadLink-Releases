@@ -5,7 +5,7 @@
 // validated CONFIG + APPROVE_OUT sequence. Peripheral pins are explicitly
 // reserved before a driver may use them.
 
-static const char* FW_VERSION = "0.3.0";
+static const char* FW_VERSION = "0.3.1";
 static const uint8_t FIRST_PIN = 2;
 static const uint8_t LAST_PIN = 69;  // A15 on Mega 2560
 static const uint8_t PIN_COUNT = 70;
@@ -51,7 +51,16 @@ struct Tm1637State {
 static const uint32_t IDENTITY_MAGIC = 0x4F4C4944UL;  // OLID
 PinState pins[PIN_COUNT];
 IdentityRecord identity;
-Tm1637State tm1637 = {false, 0, 0, 7};
+Tm1637State displays[2] = {{false, 0, 0, 7}, {false, 0, 0, 7}};
+uint8_t displayIndex = 0;
+#define tm1637 displays[displayIndex]
+
+bool selectDisplay(char* text) {
+  int index = text ? atoi(text) : 0;
+  if (index < 0 || index > 1) { sendError("TM1637_BAD_INDEX"); return false; }
+  displayIndex = static_cast<uint8_t>(index);
+  return true;
+}
 bool running = false;
 bool learnInputs = false;
 bool learnAnalog = false;
@@ -251,7 +260,8 @@ void safeAllPins() {
   running = false;
   learnInputs = false;
   learnAnalog = false;
-  releaseTm1637();
+  for (displayIndex = 0; displayIndex < 2; ++displayIndex) releaseTm1637();
+  displayIndex = 0;
   for (uint8_t pin = FIRST_PIN; pin <= LAST_PIN; ++pin) {
     pinMode(pin, INPUT);
     digitalWrite(pin, LOW);
@@ -363,6 +373,7 @@ void handleCommand(char* line) {
     char* clkText = strtok(nullptr, "|");
     char* dioText = strtok(nullptr, "|");
     char* brightText = strtok(nullptr, "|");
+    if (!selectDisplay(strtok(nullptr, "|"))) return;
     if (!clkText || !dioText || !brightText) {
       sendError("TM1637_BAD_CFG");
     } else {
@@ -374,12 +385,14 @@ void handleCommand(char* line) {
     }
   } else if (strcmp(command, "TM1637_VALUE") == 0) {
     char* valueText = strtok(nullptr, "|");
+    if (!selectDisplay(strtok(nullptr, "|"))) return;
     if (!tm1637.configured || !valueText) {
       sendError("TM1637_NOT_READY");
     } else {
       tmShowTenths(atoi(valueText));
     }
   } else if (strcmp(command, "TM1637_DASH") == 0) {
+    if (!selectDisplay(strtok(nullptr, "|"))) return;
     if (tm1637.configured) tmShowDashes();
   } else if (strcmp(command, "RUN") == 0) {
     running = true;
@@ -531,3 +544,4 @@ void loop() {
     lastHeartbeat = now;
   }
 }
+

@@ -34,7 +34,7 @@ class FakeApp:
 
 class V037MigrationTests(unittest.TestCase):
     def setUp(self) -> None:
-        source = json.loads((PROJECT / "profiles" / "a320_fenix_overhead.json").read_text(encoding="utf-8"))
+        source = json.loads((PROJECT / "tests" / "fixtures" / "legacy_profile.json").read_text(encoding="utf-8"))
         self.payload = copy.deepcopy(source)
 
     def test_combined_board_is_split_with_confirmed_pins(self) -> None:
@@ -94,3 +94,4 @@ class V037MigrationTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

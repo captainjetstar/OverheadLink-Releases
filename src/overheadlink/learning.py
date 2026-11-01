@@ -118,3 +118,4 @@ class AnalogLearningSession:
             inverted=end_mean < start_mean,
             confidence=confidence,
         )
+

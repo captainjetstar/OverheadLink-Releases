@@ -330,3 +330,4 @@ class ProfileStore:
 def issue_summary(issues: Iterable[ValidationIssue]) -> tuple[int, int]:
     items = list(issues)
     return sum(i.level == "error" for i in items), sum(i.level == "warning" for i in items)
+

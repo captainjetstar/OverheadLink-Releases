@@ -42,3 +42,4 @@ class AppPreferences:
     def use(self, port: str) -> None:
         self.ignored_ports.discard(canonical_port(port))
         self.save()
+

@@ -254,3 +254,4 @@ def ensure_20260825_pinmap(path: Path | None = None) -> bool:
         temporary.unlink(missing_ok=True)
         raise
     return True
+

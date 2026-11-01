@@ -87,3 +87,4 @@ class FenixActionCatalog:
     @property
     def output_count(self) -> int:
         return sum(action.preset_type == "Output" for action in self.actions)
+

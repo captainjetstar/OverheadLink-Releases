@@ -23,7 +23,7 @@ from overheadlink.updater import is_newer, version_tuple
 
 class MigrationV038Tests(unittest.TestCase):
     def migrated_payload(self):
-        payload = json.loads((PROJECT / "profiles" / "a320_fenix_overhead.json").read_text(encoding="utf-8"))
+        payload = json.loads((PROJECT / "tests" / "fixtures" / "legacy_profile.json").read_text(encoding="utf-8"))
         self.assertTrue(migrate_profile(payload))
         return payload
 
@@ -149,7 +149,7 @@ class UpdaterV038Tests(unittest.TestCase):
 class FirmwareV038Tests(unittest.TestCase):
     def test_firmware_contains_tm1637_reserved_driver(self) -> None:
         source = (PROJECT / "firmware" / "OverheadLinkMega" / "OverheadLinkMega.ino").read_text(encoding="utf-8")
-        self.assertIn('FW_VERSION = "0.3.0"', source)
+        self.assertIn('FW_VERSION = "0.3.1"', source)
         self.assertIn("ROLE_PERIPHERAL", source)
         self.assertIn('strcmp(command, "TM1637_CFG")', source)
         self.assertIn('strcmp(command, "TM1637_VALUE")', source)
@@ -158,3 +158,4 @@ class FirmwareV038Tests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

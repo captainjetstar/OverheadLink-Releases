@@ -322,3 +322,4 @@ class OverheadProfile:
 
     def board(self, board_id: str) -> BoardProfile | None:
         return next((board for board in self.boards if board.id == board_id), None)
+

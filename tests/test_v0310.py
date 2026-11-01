@@ -19,7 +19,7 @@ from overheadlink.v0310_fix import ADIRS_BOARD_ID, MIGRATION_ID, ensure_adirs_re
 
 class V0310RequiredBoardTests(unittest.TestCase):
     def migrated_temp_profile(self, directory: str) -> Path:
-        payload = json.loads((PROJECT / "profiles" / "a320_fenix_overhead.json").read_text(encoding="utf-8"))
+        payload = json.loads((PROJECT / "tests" / "fixtures" / "legacy_profile.json").read_text(encoding="utf-8"))
         migrate_profile(payload)
         path = Path(directory) / "a320_fenix_overhead.json"
         path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
@@ -70,10 +70,11 @@ class V0310RequiredBoardTests(unittest.TestCase):
         launcher = (PROJECT / "run_overheadlink.py").read_text(encoding="utf-8")
         firmware_ui = (PROJECT / "src" / "overheadlink" / "firmware_ui.py").read_text(encoding="utf-8")
         self.assertIn("overheadlink.firmware_ui import main", launcher)
-        self.assertIn("prepare_profile()", firmware_ui)
-        self.assertIn("ensure_adirs_required()", firmware_ui)
-        self.assertLess(firmware_ui.index("prepare_profile()"), firmware_ui.index("ensure_adirs_required()"))
+        self.assertIn("ensure_current_profile()", firmware_ui)
+        self.assertIn("ensure_current_profile()", firmware_ui)
+        self.assertNotIn("    prepare_profile()\n", firmware_ui)
 
 
 if __name__ == "__main__":
     unittest.main()
+

@@ -587,3 +587,4 @@ class MockFenixBridge(FenixBridge):
     def publish(self, assignment_id: str, value: float) -> None:
         if self.on_feedback:
             self.on_feedback(assignment_id, value)
+

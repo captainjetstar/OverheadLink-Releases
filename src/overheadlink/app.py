@@ -600,7 +600,7 @@ class OverheadLinkApp(tk.Tk):
             if board.online:
                 state = "Online"
             elif board.connection and board.connection.running:
-                state = "Identifying…"
+                state = board.last_error or ("Heartbeat lost — retrying" if board.board_name else "Waiting for firmware identity — retrying")
             else:
                 state = "Unavailable / in use"
             self.connections_tree.insert(
@@ -1829,3 +1829,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

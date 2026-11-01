@@ -20,7 +20,7 @@ from overheadlink.v0312_pinmap import MIGRATION_ID, ensure_20260825_pinmap
 
 class V0312SeparateHydFuelTests(unittest.TestCase):
     def migrated_temp_profile(self, directory: str) -> Path:
-        payload = json.loads((PROJECT / "profiles" / "a320_fenix_overhead.json").read_text(encoding="utf-8"))
+        payload = json.loads((PROJECT / "tests" / "fixtures" / "legacy_profile.json").read_text(encoding="utf-8"))
         migrate_profile(payload)
         path = Path(directory) / "a320_fenix_overhead.json"
         path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
@@ -83,8 +83,9 @@ class V0312SeparateHydFuelTests(unittest.TestCase):
         with (PROJECT / "pyproject.toml").open("rb") as handle:
             project_version = str(tomllib.load(handle)["project"]["version"])
         self.assertEqual(__version__, project_version)
-        self.assertEqual(project_version, "0.3.12")
+        self.assertEqual(project_version, "0.3.13")
 
 
 if __name__ == "__main__":
     unittest.main()
+

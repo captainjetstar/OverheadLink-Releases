@@ -264,11 +264,12 @@ class FirmwareEnabledOverheadLinkApp(EnhancedOverheadLinkApp):
 
 
 def main() -> None:
-    prepare_profile()
-    ensure_adirs_required()
+    from .current_profile import ensure_current_profile
+    ensure_current_profile()
     app = FirmwareEnabledOverheadLinkApp()
     app.mainloop()
 
 
 if __name__ == "__main__":
     main()
+

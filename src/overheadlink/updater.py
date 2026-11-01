@@ -143,3 +143,4 @@ def launch_update(path: Path) -> None:
     if not path.is_file() or path.suffix.lower() != ".exe":
         raise OSError("The verified OverheadLink update executable is missing")
     subprocess.Popen([str(path)], cwd=str(path.parent), close_fds=True)
+

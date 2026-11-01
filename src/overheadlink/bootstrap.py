@@ -267,3 +267,4 @@ def prepare_profile() -> Path:
             shutil.copy2(path, backup)
         _write_payload(path, payload)
     return path
+

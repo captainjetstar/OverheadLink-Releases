@@ -26,7 +26,7 @@ MEGA_TARGET = FirmwareTarget(
     key="mega",
     label="Mega 2560",
     board_type="MEGA",
-    firmware_version="0.3.0",
+    firmware_version="0.3.1",
     mcu="atmega2560",
     programmer="wiring",
     baudrates=(115200,),
@@ -203,3 +203,4 @@ class FirmwareFlasher:
         raise FirmwareFlashError(
             f"Firmware flashing failed on {port}. Make sure no other program has the COM port open.\n\n{detail}"
         )
+

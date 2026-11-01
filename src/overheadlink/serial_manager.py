@@ -62,6 +62,9 @@ class SerialConnection:
         self._rx = bytearray()
         self.running = False
         self.last_error = ""
+        self.last_valid_message = monotonic()
+        self.last_probe = 0.0
+        self.invalid_messages = 0
 
     def start(self) -> None:
         if self.running:
@@ -100,7 +103,7 @@ class SerialConnection:
 
     def _drain_writes(self) -> None:
         assert self._serial is not None
-        while True:
+        for _ in range(4):
             try:
                 payload = self._writes.get_nowait()
             except Empty:
@@ -129,7 +132,11 @@ class SerialConnection:
             try:
                 message = parse_message(raw)
             except (ValueError, UnicodeError):
+                self.invalid_messages += 1
+                self.last_error = "Invalid serial data: check firmware and baud rate (115200)"
                 continue
+            self.last_valid_message = monotonic()
+            self.last_error = ""
             self.on_message(self.port, message)
 
     def _run(self) -> None:
@@ -140,6 +147,10 @@ class SerialConnection:
                 waiting = int(getattr(self._serial, "in_waiting", 0) or 0)
                 chunk = self._serial.read(max(1, min(waiting, 256)))
                 self._feed_rx(chunk)
+                now = monotonic()
+                if now - self.last_valid_message > 4 and now - self.last_probe > 2:
+                    self.last_probe = now
+                    self.send(encode_message("HELLO"))
         except Exception as error:
             self.last_error = str(error)
             self.running = False
@@ -264,3 +275,4 @@ class BoardManager:
         for board in boards:
             if board.connection:
                 board.connection.close()
+

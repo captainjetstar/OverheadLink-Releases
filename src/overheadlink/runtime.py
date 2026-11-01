@@ -181,7 +181,7 @@ class EnhancedOverheadLinkApp(OverheadLinkApp):
             return
         tenths = int(round(value * 10.0))
         try:
-            connected.connection.send(self._message("TM1637_VALUE", tenths))
+            connected.connection.send(self._message("TM1637_VALUE", tenths, board.peripherals.index(peripheral)))
             self._display_dash_sent.discard(feedback_id)
             self._log(f"TM1637 {board.name} {peripheral.name}: {value:.1f} V")
         except RuntimeError as error:
@@ -198,10 +198,10 @@ class EnhancedOverheadLinkApp(OverheadLinkApp):
         for peripheral in board.peripherals:
             if peripheral.peripheral_type != PeripheralType.TM1637_4DIGIT:
                 continue
-            if version_tuple(connected.firmware) < (0, 3, 0):
+            if version_tuple(connected.firmware) < ((0, 3, 1) if len(board.peripherals) > 1 else (0, 3, 0)):
                 detail = (
                     f"{board.name} firmware {connected.firmware or 'unknown'} does not support the TM1637 driver. "
-                    "Flash OverheadLinkMega firmware v0.3.0 or newer."
+                    "Flash the bundled Mega firmware; dual displays require v0.3.1 or newer."
                 )
                 self._log(f"TM1637 DRIVER UNAVAILABLE: {detail}")
                 if show_warnings:
@@ -210,14 +210,14 @@ class EnhancedOverheadLinkApp(OverheadLinkApp):
             pins = peripheral.numeric_pins
             try:
                 connected.connection.send(
-                    self._message("TM1637_CFG", pins["clk"], pins["dio"], peripheral.brightness)
+                    self._message("TM1637_CFG", pins["clk"], pins["dio"], peripheral.brightness, board.peripherals.index(peripheral))
                 )
                 feedback_id = self._peripheral_feedback_id(board.id, peripheral.id)
                 value = self._peripheral_values.get(feedback_id)
                 if value is not None and math.isfinite(value) and peripheral.minimum_value <= value <= peripheral.maximum_value:
-                    connected.connection.send(self._message("TM1637_VALUE", int(round(value * 10.0))))
+                    connected.connection.send(self._message("TM1637_VALUE", int(round(value * 10.0)), board.peripherals.index(peripheral)))
                 else:
-                    connected.connection.send(self._message("TM1637_DASH"))
+                    connected.connection.send(self._message("TM1637_DASH", board.peripherals.index(peripheral)))
                 self._log(
                     f"TM1637 configured: {board.name} CLK={peripheral.pins['clk']} DIO={peripheral.pins['dio']}"
                 )
@@ -235,7 +235,7 @@ class EnhancedOverheadLinkApp(OverheadLinkApp):
         if connected is None or not connected.online or connected.connection is None:
             return
         try:
-            connected.connection.send(self._message("TM1637_DASH"))
+            connected.connection.send(self._message("TM1637_DASH", board.peripherals.index(peripheral)))
             self._display_dash_sent.add(feedback_id)
         except RuntimeError:
             pass
@@ -329,3 +329,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

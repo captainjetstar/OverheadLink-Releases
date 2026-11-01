@@ -14,6 +14,8 @@ class BrightnessPreset(StrEnum):
 
 
 class ColourPreset(StrEnum):
+    GOLDEN_AMBER = "GOLDEN AMBER"
+    ORANGE_AMBER = "ORANGE AMBER"
     AIRBUS_AMBER = "AIRBUS AMBER"
     WARM_WHITE = "WARM WHITE"
     SOFT_WHITE = "SOFT WHITE"
@@ -22,6 +24,8 @@ class ColourPreset(StrEnum):
 
 
 COLOUR_PRESETS: dict[ColourPreset, tuple[int, int, int]] = {
+    ColourPreset.GOLDEN_AMBER: (255, 80, 0),
+    ColourPreset.ORANGE_AMBER: (255, 35, 0),
     ColourPreset.AIRBUS_AMBER: (255, 100, 30),
     ColourPreset.WARM_WHITE: (255, 210, 160),
     ColourPreset.SOFT_WHITE: (255, 245, 225),
@@ -108,3 +112,4 @@ class BacklightController:
         self.settings.validate()
         self.send(encode_message("COLOR", self.settings.red, self.settings.green, self.settings.blue))
         return self.settings.red, self.settings.green, self.settings.blue
+

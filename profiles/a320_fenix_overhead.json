@@ -1062,14 +1062,15 @@
           "pin": "D11",
           "mode": "digital_output",
           "role": "led_upper",
-          "status": "confirmed",
-          "enabled": true,
+          "status": "needs_verification",
+          "enabled": false,
           "activeLow": false,
           "debounceMs": 35,
           "sourceRevision": "Latest confirmed panel files through 2026-10-31",
           "sim": {
             "verified": false
-          }
+          },
+          "notes": "Proposed replacement for serial-reserved D0/D1. Move physical wire to D11 and confirm in app before enabling."
         },
         {
           "id": "fuel.mode_select.lower",
@@ -1077,14 +1078,15 @@
           "pin": "D12",
           "mode": "digital_output",
           "role": "led_lower",
-          "status": "confirmed",
-          "enabled": true,
+          "status": "needs_verification",
+          "enabled": false,
           "activeLow": false,
           "debounceMs": 35,
           "sourceRevision": "Latest confirmed panel files through 2026-10-31",
           "sim": {
             "verified": false
-          }
+          },
+          "notes": "Proposed replacement for serial-reserved D0/D1. Move physical wire to D12 and confirm in app before enabling."
         },
         {
           "id": "fuel.mode_select.switch",
@@ -2614,3 +2616,4 @@
     }
   ]
 }
+

@@ -81,3 +81,4 @@ def ensure_adirs_required(path: Path | None = None) -> bool:
         temporary.unlink(missing_ok=True)
         raise
     return True
+
